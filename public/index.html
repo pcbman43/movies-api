@@ -8,6 +8,101 @@
     <title>Movies</title>
 </head>
 <body>
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+<div id="app"><h1>Movies</h1>
+    <table id="moviestable" class="table table-striped table-bordered">
+        <tr>
+            <th>name</th>
+            <th>rating</th>
+            <th>year</th>
+            <th>poster</th>
+        </tr>
+        <tr v-for="movie in movies" :key="movie.id">
+            <td>{{ movie.name}}</td>
+            <td>{{ movie.rating}}</td>
+            <td>{{ movie.year}}</td>
+            <td><img style="height:128px; width: 128px" :src="movie.poster" :alt="movie.name"></td>
+        </tr>
+    </table>
+</div>
 
+<script>
+    const {createApp} = Vue
+    const API_URL = 'http://localhost:4000'
+    createApp({
+        data() {
+            return {
+                movies: null
+            }
+        },
+        async created() {
+            await this.getMovies()
+            console.log("Movies", this.movies)
+        },
+
+        methods: {
+            getMovies: async function () {
+                let response = await this.send('GET', `${API_URL}/movies`)
+                if (response.ok) {
+                    this.movies = response.body;
+                }
+            },
+            send: function (method, url, body) {
+                const vue = this;
+
+                async function CheckError(response) {
+                    if (response.status >= 200 && response.status <= 299) {
+                        let responseText = await response.text()
+                        return {ok: true, status: response.status, body: tryToParseJSON(responseText)}
+                    } else {
+                        let responseText = await response.text()
+                        let responseObject = tryToParseJSON(responseText)
+                        if (typeof responseObject === 'object' && typeof responseObject.error === 'string') {
+                            if (response.status === 401 && responseObject.error === "Invalid token") {
+                                vue.clearStorageAndToggleLoginButtons();
+                            } else if (response.status === 401 && responseObject.error === "You have to login") {
+                                vue.clearStorageAndToggleLoginButtons();
+                            }
+                            alert('Error code ' + response.status + ":\n" + responseObject.error)
+                        } else {
+                            alert('Error code ' + response.status + ":\n" + responseText)
+                        }
+                        return {ok: false, status: response.status, body: responseObject || responseText}
+                    }
+                }
+
+                const headers = {
+                    'Content-Type': 'application/json'
+                };
+                if (this.sessionId) {
+                    headers.Authorization = "Bearer " + this.sessionId;
+                }
+                return fetch(url, {
+                    method: method,
+                    headers,
+                    body: JSON.stringify(body)
+                })
+                    .then(CheckError)
+                    .then((jsonResponse) => {
+                        return jsonResponse
+                    }).catch((error) => {
+                        throw Error('Network error: ' + error);
+                    });
+            }
+        }
+
+    }).mount('#app')
+
+    function tryToParseJSON(jsonString) {
+        try {
+            let o = JSON.parse(jsonString);
+            if (o && typeof o === "object") {
+                return o;
+            }
+        } catch (e) {
+        }
+        return '';
+    }
+</script>
 </body>
 </html>
