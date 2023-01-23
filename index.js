@@ -66,6 +66,15 @@ app.post('/sessions', (req, res) => {
         }
     )
 })
+
+app.post('/addMovie', (req, res) => {
+    res.status(201).send(
+        {
+            
+        }
+    )
+})
+
 app.delete('/sessions', (req, res) => {
     sessions = sessions.filter( ( session ) => session.id === req.body.sessionId );
     res.status(204).end()
