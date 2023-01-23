@@ -1,7 +1,10 @@
 const express = require('express')
 const app = express()
 const swaggerUi = require('swagger-ui-express');
+const Session = require('./models/session');
 require('dotenv').config()
+
+app.use(express.json())
 
 YAML = require('yamljs');
 const swaggerDocument = YAML.load('swagger.yml');
@@ -29,11 +32,45 @@ const movies = [
     }
 ]
 
+const users = [
+    {id: 1, email: "Admin", password: "Password", isAdmin: true},
+    {id: 2, email: "User", password: "Password", isAdmin: false}
+]
+
+let sessions = [
+    {id: 1, userId: 1}
+]
+
+
+
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 app.use(express.static(__dirname + '/public'));
 app.get('/movies', (req, res) => {
     res.send(movies);
 })
+
+app.post('/sessions', (req, res) => {
+    if (!req.body.email || !req.body.password) {
+        return res.status(400).send({ error: 'One or all params are missing' })
+    }
+    const user = users.find( ( user )=> user.email === req.body.email && user.password === req.body.password);
+    if (!user) {
+        return res.status(401).send({ error: 'Unauthorized: email or password is incorrect' })
+    }
+    let newSession = Session.create(user.id);
+    sessions.push(newSession)
+    res.status(201).send(
+        {
+            sessionId: newSession.id,
+            isAdmin: true
+        }
+    )
+})
+app.delete('/sessions', (req, res) => {
+    sessions = sessions.filter( ( session ) => session.id === req.body.sessionId );
+    res.status(204).end()
+})
+
 app.listen(process.env.PORT, () => {
     console.log(`App running at http://localhost:${process.env.PORT}. Documentation at http://localhost:${process.env.PORT}/docs`)
 })
