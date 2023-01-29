@@ -123,12 +123,18 @@
             }
         },
         async created() {
-            await this.getMovies()
-            this.movies = JSON.parse(localStorage.getItem('movieList'))
+            //await this.getMovies()
+            //this.movies = JSON.parse(localStorage.getItem('movieList'))
             console.log("Movies", this.movies)
 
             this.sessionId = localStorage.getItem('sessionId')
             this.isAdmin = localStorage.getItem('isAdmin')
+
+            if (localStorage.getItem('movieList') === null) {
+                this.getMovies()
+            }
+
+            this.movies = JSON.parse(localStorage.getItem('movieList'))
         },
 
         methods: {
