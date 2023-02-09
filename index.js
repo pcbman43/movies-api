@@ -42,7 +42,6 @@ let sessions = [
 ]
 
 
-
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 app.use(express.static(__dirname + '/public'));
 app.get('/movies', (req, res) => {
@@ -51,38 +50,34 @@ app.get('/movies', (req, res) => {
 
 app.post('/sessions', (req, res) => {
     if (!req.body.email || !req.body.password) {
-        return res.status(400).send({ error: 'One or all params are missing' })
+        return res.status(400).send({error: 'One or all params are missing'})
     }
-    const user = users.find( ( user )=> user.email === req.body.email && user.password === req.body.password);
+    const user = users.find((user) => user.email === req.body.email && user.password === req.body.password);
     if (!user) {
-        return res.status(401).send({ error: 'Unauthorized: email or password is incorrect' })
+        return res.status(401).send({error: 'Unauthorized: email or password is incorrect'})
     }
     let newSession = Session.create(user.id);
     sessions.push(newSession)
     if (req.body.email === 'Admin') {
         return res.status(201).send({
-            sessionId: newSession.id,
-            isAdmin: true
-        })
+                sessionId: newSession.id,
+                isAdmin: true
+            }
+        )
     }
-    res.status(201).send(
-        {
-            sessionId: newSession.id,
-            isAdmin: false
-        }
-    )
 })
+
 
 app.post('/movies', (req, res) => {
     if (!req.body.name || !req.body.rating || !req.body.year || !req.body.poster) {
-        return res.status(400).send({ error: 'One or all params are missing' })
+        return res.status(400).send({error: 'One or all params are missing'})
     } else {
         return res.status(201).end()
     }
 })
 
 app.delete('/sessions', (req, res) => {
-    sessions = sessions.filter( ( session ) => session.id === req.body.sessionId );
+    sessions = sessions.filter((session) => session.id === req.body.sessionId);
     res.status(204).end()
 })
 
