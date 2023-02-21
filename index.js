@@ -67,6 +67,14 @@ app.post('/sessions', (req, res) => {
     }
 })
 
+app.get('/login', (req, res) => {
+    console.log(req.body)
+    if (req.body.username == 'Admin' && req.body.password == 'Password') {
+        isAdmin = true
+        res.send('You are logged in as Admin')
+    } else
+        res.send({error: 'Wrong creditials'})
+})
 
 app.post('/movies', (req, res) => {
     if (!req.body.name || !req.body.rating || !req.body.year || !req.body.poster) {

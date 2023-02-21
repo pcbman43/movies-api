@@ -30,15 +30,14 @@
             <th>poster</th>
         </tr>
         <tr v-for="movie in movies" :key="movie.id">
-            <td>{{ movie.name}}</td>
-            <td>{{ movie.rating}}</td>
-            <td>{{ movie.year}}</td>
+            <td>{{ movie.name }}</td>
+            <td>{{ movie.rating }}</td>
+            <td>{{ movie.year }}</td>
             <td><img style="height:128px; width: 128px" :src="movie.poster" :alt="movie.name"></td>
         </tr>
     </table>
 
 
-    
     <div class="modal" id="signInModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -73,24 +72,28 @@
                     <p>Edit movie details: </p><br>
                     <form>
                         <label for="movieName">name:</label><br>
-                        <input id="movieName" name="movieName" type="text" v-model="modals.addMovie.name" value="movie4" required><br>
+                        <input id="movieName" name="movieName"  v-model="modals.addMovie.name"
+                               required><br>
                         <label for="movieRating">rating:</label><br>
-                        <input id="movieRating" name="movieRating" type="number" v-model="modals.addMovie.rating" value="6" required><br>
+                        <input id="movieRating" name="movieRating"  v-model="modals.addMovie.rating"
+                                required><br>
                         <label for="movieYear">year:</label><br>
-                        <input id="movieYear" name="movieYear" type="number" v-model="modals.addMovie.year" value="2024" required><br>
-                        <label for="movieYear">poster:</label><br>
-                        <input id="movieYear" name="movieYear" type="file" accept="image/jpeg, image/png, image/jpg" v-model="modals.addMovie.poster" required>
+                        <input id="movieYear" name="movieYear"  v-model="modals.addMovie.year"
+                               required><br>
+                        <label for="moviePoster">poster:</label><br>
+                        <input id="moviePoster" name="moviePoster" type="file" @change="onChangeFile" accept="image/jpeg, image/png, image/jpg"
+                               required>
                         <output></output>
                     </form>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" @click="commitChanges" class="btn btn-primary">Apply</button>
+                    <button type="button" @click="addMovie" class="btn btn-primary">Apply</button>
                 </div>
             </div>
         </div>
     </div>
-    
+
 
 </div>
 
@@ -115,9 +118,9 @@
         data() {
             return {
                 movies: null,
-                sessionId: null, 
+                sessionId: null,
                 isAdmin: null,
-                
+
                 modals: {
                     signIn: {
                         email: null,
@@ -133,6 +136,7 @@
                 }
             }
         },
+
         async created() {
             //await this.getMovies()
             //this.movies = JSON.parse(localStorage.getItem('movieList'))
@@ -148,23 +152,35 @@
         },
 
         methods: {
+            onChangeFile(event) {
+                const file = event.target.files[0];
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    this.modals.addMovie.poster = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            },
             signIn: async function () {
-                let response = await this.send('POST', `/sessions`, {
-                    email: this.modals.signIn.email,
-                    password: this.modals.signIn.password
-                });
-                if (response.ok) {
-
-                    this.sessionId = response.body.sessionId;
-                    this.isAdmin = response.body.isAdmin;
-
-                    localStorage.setItem('sessionId', this.sessionId)
-                    localStorage.setItem('isAdmin', this.isAdmin)
-
-                    this.modalHandler.hide()
-                }
-            }
-            ,
+                var username_value = document.getElementById("email").value;
+                var password_value = document.getElementById("password").value;
+                const requestOptions = {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        email: username_value,
+                        password: password_value
+                    })
+                };
+                await fetch('/sessions', requestOptions)
+                    .then(response => response.json())
+                    .then(data => {
+                        this.sessionId = data.sessionId;
+                        this.isAdmin = data.isAdmin;
+                        localStorage.setItem('sessionId', data.sessionId);
+                        localStorage.setItem('isAdmin', data.isAdmin);
+                        this.modalHandler.hide()
+                    });
+            },
             showSignInModal: function () {
                 this.modalHandler = new bootstrap.Modal(document.getElementById('signInModal'), {})
                 this.modalHandler.show()
@@ -197,12 +213,12 @@
                 })
                 if (response.ok) {
                     this.movies.push({
-                            id: this.modals.addMovie.id,
-                            name: this.modals.addMovie.name,
-                            rating: this.modals.addMovie.rating,
-                            year: this.modals.addMovie.year,
-                            poster: this.modals.addMovie.poster
-                        })
+                        id: this.modals.addMovie.id,
+                        name: this.modals.addMovie.name,
+                        rating: this.modals.addMovie.rating,
+                        year: this.modals.addMovie.year,
+                        poster: this.modals.addMovie.poster
+                    })
 
                     localStorage.setItem('movieList', JSON.stringify(this.movies))
                     this.modalHandler.hide()
@@ -221,29 +237,29 @@
                 }
             },
 
-                send: function (method, url, body) {
-                    const vue = this;
+            send: function (method, url, body) {
+                const vue = this;
 
-                    async function CheckError(response) {
-                        if (response.status >= 200 && response.status <= 299) {
-                            let responseText = await response.text()
-                            return {ok: true, status: response.status, body: tryToParseJSON(responseText)}
-                        } else {
-                            let responseText = await response.text()
-                            let responseObject = tryToParseJSON(responseText)
-                            if (typeof responseObject === 'object' && typeof responseObject.error === 'string') {
-                                if (response.status === 401 && responseObject.error === "Invalid token") {
-                                    vue.clearStorageAndToggleSignInButtons();
-                                } else if (response.status === 401 && responseObject.error === "You have to signIn") {
-                                    vue.clearStorageAndToggleSignInButtons();
-                                }
-                                alert('Error code ' + response.status + ":\n" + responseObject.error)
-                            } else {
-                                alert('Error code ' + response.status + ":\n" + responseText)
+                async function CheckError(response) {
+                    if (response.status >= 200 && response.status <= 299) {
+                        let responseText = await response.text()
+                        return {ok: true, status: response.status, body: tryToParseJSON(responseText)}
+                    } else {
+                        let responseText = await response.text()
+                        let responseObject = tryToParseJSON(responseText)
+                        if (typeof responseObject === 'object' && typeof responseObject.error === 'string') {
+                            if (response.status === 401 && responseObject.error === "Invalid token") {
+                                vue.clearStorageAndToggleSignInButtons();
+                            } else if (response.status === 401 && responseObject.error === "You have to signIn") {
+                                vue.clearStorageAndToggleSignInButtons();
                             }
-                            return {ok: false, status: response.status, body: responseObject || responseText}
+                            alert('Error code ' + response.status + ":\n" + responseObject.error)
+                        } else {
+                            alert('Error code ' + response.status + ":\n" + responseText)
                         }
+                        return {ok: false, status: response.status, body: responseObject || responseText}
                     }
+                }
 
                 const headers = {
                     'Content-Type': 'application/json'
