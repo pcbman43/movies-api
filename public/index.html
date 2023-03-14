@@ -28,12 +28,14 @@
             <th>rating</th>
             <th>year</th>
             <th>poster</th>
+            <th v-if="isAdmin">administrator options</th>
         </tr>
         <tr v-for="movie in movies" :key="movie.id">
             <td>{{ movie.name }}</td>
             <td>{{ movie.rating }}</td>
             <td>{{ movie.year }}</td>
             <td><img style="height:128px; width: 128px" :src="movie.poster" :alt="movie.name"></td>
+            <td v-if="isAdmin"><button type="button">Edit</button></td>
         </tr>
     </table>
 
