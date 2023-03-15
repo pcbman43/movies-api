@@ -278,12 +278,12 @@
             },
 
             editMovie: async function() {
-                
+
                 if (this.modals.editMovie.poster === null) {
                     this.modals.editMovie.poster = this.movies[this.modals.editMovie.id-1].poster
                 }
 
-                let response = await this.send('POST', '/movies', {
+                let response = await this.send('PATCH', '/movies', {
 
                     id: this.modals.editMovie.id,
                     name: this.modals.editMovie.name,

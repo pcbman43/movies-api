@@ -84,6 +84,14 @@ app.post('/movies', (req, res) => {
     }
 })
 
+app.patch('/movies', (req, res) => {
+    if (!req.body.name || !req.body.rating || !req.body.year || !req.body.poster) {
+        return res.status(400).send({error: 'One or all params are missing'})
+    } else {
+        return res.status(201).end()
+    }
+})
+
 app.delete('/sessions', (req, res) => {
     sessions = sessions.filter((session) => session.id === req.body.sessionId);
     res.status(204).end()
