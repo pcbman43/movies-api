@@ -83,7 +83,7 @@
                         <input id="movieYear" name="movieYear"  v-model="modals.addMovie.year"
                                required><br>
                         <label for="moviePoster">poster:</label><br>
-                        <input id="moviePoster" name="moviePoster" type="file" @change="onChangeFile" accept="image/jpeg, image/png, image/jpg"
+                        <input id="moviePoster" name="moviePoster" type="file" @change="onChangeFileAdd" accept="image/jpeg, image/png, image/jpg"
                                required>
                         <output></output>
                     </form>
@@ -103,26 +103,26 @@
                     <button type="button" aria-label="Close" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <p>Edit movie details: </p><br>
+                    <p>Edit existing movie details: </p><br>
                     <form>
                         <label for="movieName">name:</label><br>
-                        <input id="movieName" name="movieName"  v-model="modals.addMovie.name"
+                        <input id="movieName" name="movieName"  v-model="modals.editMovie.name"
                                required><br>
                         <label for="movieRating">rating:</label><br>
-                        <input id="movieRating" name="movieRating"  v-model="modals.addMovie.rating"
+                        <input id="movieRating" name="movieRating"  v-model="modals.editMovie.rating"
                                 required><br>
                         <label for="movieYear">year:</label><br>
-                        <input id="movieYear" name="movieYear"  v-model="modals.addMovie.year"
+                        <input id="movieYear" name="movieYear"  v-model="modals.editMovie.year"
                                required><br>
-                        <label for="moviePoster">poster:</label><br>
-                        <input id="moviePoster" name="moviePoster" type="file" @change="onChangeFile" accept="image/jpeg, image/png, image/jpg"
+                        <label for="moviePoster">(optional) poster:</label><br>
+                        <input id="moviePoster" name="moviePoster" type="file" @change="onChangeFileEdit" accept="image/jpeg, image/png, image/jpg"
                                required>
                         <output></output>
                     </form>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" @click="" class="btn btn-primary">Apply</button>
+                    <button type="button" @click="editMovie" class="btn btn-primary">Apply</button>
                 </div>
             </div>
         </div>
@@ -166,6 +166,13 @@
                         rating: null,
                         year: null,
                         poster: null
+                    },
+                    editMovie: {
+                        id: null,
+                        name: null,
+                        rating: null,
+                        year: null,
+                        poster: null
                     }
                 }
             }
@@ -186,7 +193,7 @@
         },
 
         methods: {
-            onChangeFile(event) {
+            onChangeFileAdd(event) {
                 const file = event.target.files[0];
                 const reader = new FileReader();
                 reader.onload = (event) => {
@@ -194,6 +201,16 @@
                 };
                 reader.readAsDataURL(file);
             },
+
+            onChangeFileEdit(event) {
+                const file = event.target.files[0];
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    this.modals.editMovie.poster = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            },
+            
             signIn: async function () {
                 var username_value = document.getElementById("email").value;
                 var password_value = document.getElementById("password").value;
@@ -239,6 +256,7 @@
                 this.modals.addMovie.id = Object.keys(this.movies).length+=1
 
                 let response = await this.send('POST', '/movies', {
+
                     id: this.modals.addMovie.id,
                     name: this.modals.addMovie.name,
                     rating: this.modals.addMovie.rating,
@@ -259,6 +277,40 @@
                 }
             },
 
+            editMovie: async function() {
+                
+                if (this.modals.editMovie.poster === null) {
+                    this.modals.editMovie.poster = this.movies[this.modals.editMovie.id-1].poster
+                }
+
+                let response = await this.send('POST', '/movies', {
+
+                    id: this.modals.editMovie.id,
+                    name: this.modals.editMovie.name,
+                    rating: this.modals.editMovie.rating,
+                    year: this.modals.editMovie.year,
+                    poster: this.modals.editMovie.poster
+
+                })
+                if (response.ok) {
+
+                    var movieIndex = this.movies.findIndex(selectedMovie => selectedMovie.id === this.modals.editMovie.id)
+                    this.movies[movieIndex].name = this.modals.editMovie['name']
+                    this.movies[movieIndex].rating = this.modals.editMovie['rating']
+                    this.movies[movieIndex].year = this.modals.editMovie['year']
+                    this.movies[movieIndex].poster = this.modals.editMovie['poster']
+
+                    localStorage.setItem('movieList', JSON.stringify(this.movies))
+                    this.modals.editMovie.id = null
+                    this.modals.editMovie.name = null
+                    this.modals.editMovie.rating = null
+                    this.modals.editMovie.year = null
+                    this.modals.editMovie.poster = null
+                    this.modalHandler.hide()
+                }
+
+            },
+
             showAddMovieModal: function () {
                 this.modalHandler = new bootstrap.Modal(document.getElementById('addMovieModal'), {})
                 this.modalHandler.show()
@@ -266,9 +318,10 @@
 
             showEditMovieModal: function (movieId) {
                 this.modalHandler = new bootstrap.Modal(document.getElementById('editMovieModal'), {})
-                this.modals.addMovie.name = this.movies[movieId-1]['name']
-                this.modals.addMovie.rating = this.movies[movieId-1]['rating']
-                this.modals.addMovie.year = this.movies[movieId-1]['year']
+                this.modals.editMovie.id = this.movies[movieId-1]['id']
+                this.modals.editMovie.name = this.movies[movieId-1]['name']
+                this.modals.editMovie.rating = this.movies[movieId-1]['rating']
+                this.modals.editMovie.year = this.movies[movieId-1]['year']
                 this.modalHandler.show()
             },
 
