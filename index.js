@@ -6,6 +6,7 @@ require('dotenv').config()
 
 app.use(express.json())
 
+
 YAML = require('yamljs');
 const swaggerDocument = YAML.load('swagger.yml');
 const movies = [
@@ -49,31 +50,31 @@ app.get('/movies', (req, res) => {
 })
 
 app.post('/sessions', (req, res) => {
+    
     if (!req.body.email || !req.body.password) {
         return res.status(400).send({error: 'One or all params are missing'})
     }
-    const user = users.find((user) => user.email === req.body.email && user.password === req.body.password);
-    if (!user) {
-        return res.status(401).send({error: 'Unauthorized: email or password is incorrect'})
-    }
-    let newSession = Session.create(user.id);
-    sessions.push(newSession)
-    if (req.body.email === 'Admin') {
-        return res.status(201).send({
-                sessionId: newSession.id,
-                isAdmin: true
-            }
-        )
-    }
-})
 
-app.get('/login', (req, res) => {
-    console.log(req.body)
-    if (req.body.username == 'Admin' && req.body.password == 'Password') {
-        isAdmin = true
-        res.send('You are logged in as Admin')
-    } else
-        res.send({error: 'Wrong creditials'})
+    var user = users.find((user) => user.email === req.body.email);
+
+    if (user) {
+        if (user.password === req.body.password) {
+
+            let newSession = Session.create(user.id);
+            sessions.push(newSession)
+
+            return res.status(201).send({
+                sessionId: newSession.id,
+                isAdmin: user.isAdmin
+            })
+
+        } else {
+            return res.status(401).send({error: 'Unauthorized: The password you entered is incorrect'})
+        }
+
+    } else {
+        return res.status(401).send({error: 'Unauthorized: The email you entered is not registered'})
+    }
 })
 
 app.post('/movies', (req, res) => {
@@ -84,12 +85,33 @@ app.post('/movies', (req, res) => {
     }
 })
 
-app.patch('/movies', (req, res) => {
-    if (!req.body.name || !req.body.rating || !req.body.year || !req.body.poster) {
-        return res.status(400).send({error: 'One or all params are missing'})
-    } else {
-        return res.status(201).end()
+function isValidJSON(jsonString) {
+    try {
+        JSON.parse(jsonString)
+        return true
+    } catch (e) {
+        return false
     }
+}
+
+app.patch('/movies', (req, res) => {
+
+    if (!req.body.sessionId) {
+        return res.status(401).send({error: 'Unauthorized'})
+
+    } else if (req.body.isAdmin === 'false') {
+        return res.status(403).send({error: 'Forbidden'})
+    
+    } else if (isValidJSON === false) {
+        return res.status(400).send({error: 'Unexpected end of JSON input'})
+        
+    } else if (req.body.name === '') {
+        return res.status(400).send({error: 'Invalid title'})
+
+    } else {
+        return res.status(204).end()
+    }
+
 })
 
 app.delete('/sessions', (req, res) => {

@@ -1,87 +1,106 @@
+---
 openapi: 3.0.2
 info:
-    title: movies_api
-    version: 1.0.0
+  title: movies_api
+  version: 1.0.0
 paths:
-    /movies:
-        summary: Path used to manage the list of movies.
-        description: 'The REST endpoint/path used to list and create zero or more `Movie` entities. '
-        get:
-            requestBody: {}
-            responses:
-                '200':
-                    content:
-                        application/json:
-                            schema:
-                                type: array
-                                items:
-                                    $ref: '#/components/schemas/Movie'
-                    description: Successful response - returns an array of `Movie` entities.
-            operationId: getMovies
-            summary: List All Movies
-            description: Gets a list of all `Movie` entities.
-        post:
-            requestBody:
-                description: A new Movie to be created.
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/Movie'
-                required: true
-            responses:
-                '201':
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/Movie'
-                    description: Adds movie to the list of movies
-                '400':
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/Movie'
-                    description: When the user is admin but one or more params was incorrect or missing
-                '401':
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/Movie'
-                    description: Will not add a movie to the list of movies because user isnt an admin
-                '403':
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/Movie'
-                    description: Will not add a movie to the list of movies because user isnt an admin
-            summary: Add movie to the list
+  /movies:
+    summary: Path used to manage the list of movies.
+    description: 'The REST endpoint/path used to list and create zero or more `Movie`
+      entities. '
+    get:
+      requestBody: {}
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Movie'
+          description: Successful response - returns an array of `Movie` entities.
+      operationId: getMovies
+      summary: List All Movies
+      description: Gets a list of all `Movie` entities.
+    post:
+      requestBody:
+        description: A new Movie to be created.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Movie'
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Movie'
+          description: Adds movie to the list of movies
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Movie'
+          description: When the user is admin but one or more params was incorrect
+            or missing
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Movie'
+          description: Will not add a movie to the list of movies because user isnt
+            an admin
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Movie'
+          description: Will not add a movie to the list of movies because user isnt
+            an admin
+      operationId: addMovie
+      summary: Add movie to the list
+    patch:
+      responses:
+        "204":
+          content:
+            application/json: {}
+          description: Modifies a movie in the list of movies
+        "401":
+          description: When the user was not logged in
+        "403":
+          description: When the user was not admin
+        "400":
+          description: When the user is admin and title WAS given but was EMPTY
+      operationId: editMovie
+      summary: Edit movie info in the list
 components:
-    schemas:
-        Movie:
-            title: Root Type for Movie
-            description: ''
-            type: object
-            properties:
-                id:
-                    format: int32
-                    type: integer
-                name:
-                    type: string
-                rating:
-                    format: int32
-                    type: integer
-                year:
-                    format: int32
-                    type: integer
-                poster:
-                    type: string
-            example:
-                id: 1
-                name: movie1
-                rating: 3
-                year: 2004
-                poster: >-
-                    data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAIAQMAAAD+wSzIAAAABlBMVEX///+/v7+jQ3Y5AAAADklEQVQI12P4AIX8EAgALgAD/aNpbtEAAAAASUVORK5CYII
-    securitySchemes:
-        Bearer:
-            scheme: bearer
-            type: http
+  schemas:
+    Movie:
+      title: Root Type for Movie
+      description: ""
+      type: object
+      properties:
+        id:
+          format: int32
+          type: integer
+        name:
+          type: string
+        rating:
+          format: int32
+          type: integer
+        year:
+          format: int32
+          type: integer
+        poster:
+          type: string
+      example:
+        id: 1
+        name: movie1
+        rating: 3
+        year: 2004
+        poster: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAIAQMAAAD+wSzIAAAABlBMVEX///+/v7+jQ3Y5AAAADklEQVQI12P4AIX8EAgALgAD/aNpbtEAAAAASUVORK5CYII"
+  securitySchemes:
+    Bearer:
+      scheme: bearer
+      type: http

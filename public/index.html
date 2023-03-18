@@ -179,9 +179,7 @@
         },
 
         async created() {
-            //await this.getMovies()
-            //this.movies = JSON.parse(localStorage.getItem('movieList'))
-            console.log("Movies", this.movies)
+            
             this.sessionId = localStorage.getItem('sessionId')
             this.isAdmin = localStorage.getItem('isAdmin')
 
@@ -212,26 +210,27 @@
             },
             
             signIn: async function () {
-                var username_value = document.getElementById("email").value;
-                var password_value = document.getElementById("password").value;
-                const requestOptions = {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        email: username_value,
-                        password: password_value
-                    })
-                };
-                await fetch('/sessions', requestOptions)
-                    .then(response => response.json())
-                    .then(data => {
-                        this.sessionId = data.sessionId;
-                        this.isAdmin = data.isAdmin;
-                        localStorage.setItem('sessionId', data.sessionId);
-                        localStorage.setItem('isAdmin', data.isAdmin);
-                        this.modalHandler.hide()
-                    });
+                
+                let response = await this.send('POST', '/sessions', {
+
+                email: this.modals.signIn.email,
+                password: this.modals.signIn.password
+                    
+                })
+
+                if (response.ok) {
+
+                    this.sessionId = response.body.sessionId
+                    this.isAdmin = response.body.isAdmin
+
+                    localStorage.setItem('sessionId', this.sessionId)
+                    localStorage.setItem('isAdmin', this.isAdmin)
+
+                    this.modalHandler.hide()
+                    
+                }
             },
+
             showSignInModal: function () {
                 this.modalHandler = new bootstrap.Modal(document.getElementById('signInModal'), {})
                 this.modalHandler.show()
@@ -284,12 +283,16 @@
                 }
 
                 let response = await this.send('PATCH', '/movies', {
+                    
 
                     id: this.modals.editMovie.id,
                     name: this.modals.editMovie.name,
                     rating: this.modals.editMovie.rating,
                     year: this.modals.editMovie.year,
-                    poster: this.modals.editMovie.poster
+                    poster: this.modals.editMovie.poster,
+
+                    sessionId: this.sessionId,
+                    isAdmin: this.isAdmin
 
                 })
                 if (response.ok) {
