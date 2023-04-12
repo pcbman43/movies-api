@@ -50,6 +50,44 @@ app.get('/movies', (req, res) => {
     res.send(movies);
 })
 
+function isValidJSON(jsonString) {
+    try {
+        if (typeof jsonString !== 'string') {
+            JSON.parse(JSON.stringify(jsonString))
+        } else {
+            JSON.parse(jsonString)
+        }
+        return true
+    } catch (e) {
+        return false
+    }
+}
+
+function checkAuth(req, res) {
+
+    try {
+
+        if (req.headers.authorization) {
+            let sessionId = req.headers.authorization
+
+            session = sessions.find((session) => session.id === sessionId)
+
+            if (!session) {
+                return res.status(401).send({error: 'Unauthorized'})
+            }
+        } else {
+            return res.status(401).send({error: 'Missing authorization data'})
+        }
+
+        var user = users.find((user) => user.id === session.userId)
+
+        return user.isAdmin
+
+    } catch (e) {
+        return res.status(401).send({error: 'Unauthorized'})
+    }
+}
+
 app.post('/sessions', (req, res) => {
 
     if (!req.headers.authorization) {
@@ -75,57 +113,44 @@ app.post('/sessions', (req, res) => {
 
             return res.status(201).send({
                 sessionId: newSession.id,
-                isAdmin: user.isAdmin,
-                sessions: sessions
+                isAdmin: user.isAdmin
             })
 
         } else {
             return res.status(401).send({error: 'Unauthorized: The password you entered is incorrect'})
         }
-
+        
     } else {
         return res.status(401).send({error: 'Unauthorized: The email you entered is not registered'})
     }
 })
 
 app.post('/movies', (req, res) => {
-    if (!req.body.name || !req.body.rating || !req.body.year || !req.body.poster) {
+
+    let user = checkAuth(req, res)
+    
+    if (user.isAdmin === 'false') {
+        return res.status(403).send({error: 'Forbidden'})
+    
+    } else if (isValidJSON(req.body) === false) {
+        return res.status(400).send({error: 'Unexpected end of JSON input'})
+
+    } else if (!req.body.name || !req.body.rating || !req.body.year || !req.body.poster) {
         return res.status(400).send({error: 'One or all params are missing'})
+
+    } else if (!req.body.name || (typeof req.body.name === 'string') && req.body.name.trim() === '') {
+        return res.status(400).send({error: "Missing title"})
+
     } else {
-        return res.status(201).end()
+        return res.status(204).end()
     }
+
 })
 
-function isValidJSON(jsonString) {
-    try {
-        if (typeof jsonString !== 'string') {
-            JSON.parse(JSON.stringify(jsonString))
-        } else {
-            JSON.parse(jsonString)
-        }
-        return true
-    } catch (e) {
-        return false
-    }
-}
 
 app.patch('/movies', (req, res) => {
     
-    let session;
-
-    if (req.headers.authorization) {
-        let sessionId = req.headers.authorization
-
-        session = sessions.find((session) => session.id === sessionId)
-
-        if (!session) {
-            return res.status(401).send({error: 'Unauthorized'})
-        }
-    } else {
-        return res.status(401).send({error: 'Missing authorization data'})
-    }
-
-    var user = users.find((user) => user.id === session.userId)
+    let user = checkAuth(req, res)
 
     if (user.isAdmin === 'false') {
         return res.status(403).send({error: 'Forbidden'})
