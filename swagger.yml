@@ -61,6 +61,8 @@ paths:
       operationId: addMovie
       summary: Add movie to the list
     patch:
+      security:
+        - apiKey: []
       responses:
         "204":
           content:
@@ -104,3 +106,10 @@ components:
     Bearer:
       scheme: bearer
       type: http
+    basicAuth:
+      type: http
+      scheme: basic
+    apiKey:
+      type: apiKey
+      name: Authorization
+      in: header

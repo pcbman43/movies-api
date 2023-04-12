@@ -57,7 +57,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" @click="register" class="btn btn-secondary">Register</button>
+                    <!--button type="button" @click="register" class="btn btn-secondary">Register</button-->
                     <button type="button" @click="signIn" class="btn btn-primary">Confirm signIn</button>
                 </div>
             </div>
@@ -83,8 +83,7 @@
                         <input id="movieYear" name="movieYear"  v-model="modals.addMovie.year"
                                required><br>
                         <label for="moviePoster">poster:</label><br>
-                        <input id="moviePoster" name="moviePoster" type="file" @change="onChangeFileAdd" accept="image/jpeg, image/png, image/jpg"
-                               required>
+                        <input id="moviePoster" name="moviePoster" type="file" @change="onChangeFileAdd" accept="image/jpeg, image/png, image/jpg" required>
                         <output></output>
                     </form>
                 </div>
@@ -106,17 +105,13 @@
                     <p>Edit existing movie details: </p><br>
                     <form>
                         <label for="movieName">name:</label><br>
-                        <input id="movieName" name="movieName"  v-model="modals.editMovie.name"
-                               required><br>
+                        <input id="movieName" name="movieName"  v-model="modals.editMovie.name" required><br>
                         <label for="movieRating">rating:</label><br>
-                        <input id="movieRating" name="movieRating"  v-model="modals.editMovie.rating"
-                                required><br>
+                        <input id="movieRating" name="movieRating"  v-model="modals.editMovie.rating" required><br>
                         <label for="movieYear">year:</label><br>
-                        <input id="movieYear" name="movieYear"  v-model="modals.editMovie.year"
-                               required><br>
+                        <input id="movieYear" name="movieYear"  v-model="modals.editMovie.year" required><br>
                         <label for="moviePoster">(optional) poster:</label><br>
-                        <input id="moviePoster" name="moviePoster" type="file" @change="onChangeFileEdit" accept="image/jpeg, image/png, image/jpg"
-                               required>
+                        <input id="moviePoster" name="moviePoster" type="file" @change="onChangeFileEdit" accept="image/jpeg, image/png, image/jpg" required>
                         <output></output>
                     </form>
                 </div>
@@ -210,25 +205,39 @@
             },
             
             signIn: async function () {
-                
-                let response = await this.send('POST', '/sessions', {
 
-                email: this.modals.signIn.email,
-                password: this.modals.signIn.password
-                    
+                this.email = this.modals.signIn.email,
+                this.password = this.modals.signIn.password
+
+                encodedAuth = btoa(encodeURIComponent(this.email) + ":" + encodeURIComponent(this.password));
+
+                let response = await fetch('/sessions', {
+                    method: 'POST',
+                    headers: {
+                        "Authorization": "Basic " + encodedAuth
+                    }
                 })
 
-                if (response.ok) {
-
-                    this.sessionId = response.body.sessionId
-                    this.isAdmin = response.body.isAdmin
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    } else {
+                        throw new Error('Something went wrong');
+                    }
+                })
+                .then(data => {
+                    this.sessionId = data.sessionId
+                    this.isAdmin = data.isAdmin
 
                     localStorage.setItem('sessionId', this.sessionId)
                     localStorage.setItem('isAdmin', this.isAdmin)
 
                     this.modalHandler.hide()
-                    
-                }
+                })
+            
+                .catch(error => {
+                    console.error('Error:', error);
+                });
             },
 
             showSignInModal: function () {
@@ -254,14 +263,21 @@
 
                 this.modals.addMovie.id = Object.keys(this.movies).length+=1
 
-                let response = await this.send('POST', '/movies', {
-
-                    id: this.modals.addMovie.id,
-                    name: this.modals.addMovie.name,
-                    rating: this.modals.addMovie.rating,
-                    year: this.modals.addMovie.year,
-                    poster: this.modals.addMovie.poster
+                let response = await fetch('/movies', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json;charset=utf-8',
+                        'Authorization': this.sessionId
+                    },
+                    body: JSON.stringify({
+                        id: this.modals.addMovie.id,
+                        name: this.modals.addMovie.name,
+                        rating: this.modals.addMovie.rating,
+                        year: this.modals.addMovie.year,
+                        poster: this.modals.addMovie.poster
+                    })
                 })
+
                 if (response.ok) {
                     this.movies.push({
                         id: this.modals.addMovie.id,
@@ -282,35 +298,42 @@
                     this.modals.editMovie.poster = this.movies[this.modals.editMovie.id-1].poster
                 }
 
-                let response = await this.send('PATCH', '/movies', {
-                    
-
-                    id: this.modals.editMovie.id,
-                    name: this.modals.editMovie.name,
-                    rating: this.modals.editMovie.rating,
-                    year: this.modals.editMovie.year,
-                    poster: this.modals.editMovie.poster,
-
-                    sessionId: this.sessionId,
-                    isAdmin: this.isAdmin
-
+                let response = await fetch('/movies', {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json;charset=utf-8',
+                        'Authorization': this.sessionId
+                    },
+                    body: JSON.stringify({
+                        id: this.modals.editMovie.id,
+                        name: this.modals.editMovie.name,
+                        rating: this.modals.editMovie.rating,
+                        year: this.modals.editMovie.year,
+                        poster: this.modals.editMovie.poster
+                    })
                 })
-                if (response.ok) {
 
-                    var movieIndex = this.movies.findIndex(selectedMovie => selectedMovie.id === this.modals.editMovie.id)
-                    this.movies[movieIndex].name = this.modals.editMovie['name']
-                    this.movies[movieIndex].rating = this.modals.editMovie['rating']
-                    this.movies[movieIndex].year = this.modals.editMovie['year']
-                    this.movies[movieIndex].poster = this.modals.editMovie['poster']
+                .then(response => {
+                    if (response.ok) {
+                        var movieIndex = this.movies.findIndex(selectedMovie => selectedMovie.id === this.modals.editMovie.id)
+                        this.movies[movieIndex].name = this.modals.editMovie['name']
+                        this.movies[movieIndex].rating = this.modals.editMovie['rating']
+                        this.movies[movieIndex].year = this.modals.editMovie['year']
+                        this.movies[movieIndex].poster = this.modals.editMovie['poster']
 
-                    localStorage.setItem('movieList', JSON.stringify(this.movies))
-                    this.modals.editMovie.id = null
-                    this.modals.editMovie.name = null
-                    this.modals.editMovie.rating = null
-                    this.modals.editMovie.year = null
-                    this.modals.editMovie.poster = null
-                    this.modalHandler.hide()
-                }
+                        localStorage.setItem('movieList', JSON.stringify(this.movies))
+                        this.modals.editMovie.id = null
+                        this.modals.editMovie.name = null
+                        this.modals.editMovie.rating = null
+                        this.modals.editMovie.year = null
+                        this.modals.editMovie.poster = null
+                        this.modalHandler.hide()
+                    }
+                })
+
+                .catch(error => {
+                    console.error('Error:', error);
+                });
 
             },
 

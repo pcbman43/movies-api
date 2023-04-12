@@ -5,6 +5,7 @@ const Session = require('./models/session');
 require('dotenv').config()
 
 app.use(express.json())
+app.use(express.urlencoded({ extended: true }))
 
 
 YAML = require('yamljs');
@@ -38,7 +39,7 @@ const users = [
     {id: 2, email: "User", password: "Password", isAdmin: false}
 ]
 
-let sessions = [
+var sessions = [
     {id: 1, userId: 1}
 ]
 
@@ -50,22 +51,32 @@ app.get('/movies', (req, res) => {
 })
 
 app.post('/sessions', (req, res) => {
-    
-    if (!req.body.email || !req.body.password) {
+
+    if (!req.headers.authorization) {
+        return res.status(400).send({error: 'Missing login credentials'})
+    }
+
+    const base64Credentials = req.headers.authorization.split(' ')[1];
+    const credentials = Buffer.from(base64Credentials, 'base64').toString('ascii');
+    const [reqEmail, reqPassword] = credentials.split(':');
+
+    if (!reqEmail || !reqPassword || reqEmail === 'null' && reqPassword === 'null') {
         return res.status(400).send({error: 'One or all params are missing'})
     }
 
-    var user = users.find((user) => user.email === req.body.email);
+
+    let user = users.find((user) => user.email === reqEmail);
 
     if (user) {
-        if (user.password === req.body.password) {
+        if (user.password === reqPassword) {
 
             let newSession = Session.create(user.id);
             sessions.push(newSession)
 
             return res.status(201).send({
                 sessionId: newSession.id,
-                isAdmin: user.isAdmin
+                isAdmin: user.isAdmin,
+                sessions: sessions
             })
 
         } else {
@@ -87,7 +98,11 @@ app.post('/movies', (req, res) => {
 
 function isValidJSON(jsonString) {
     try {
-        JSON.parse(jsonString)
+        if (typeof jsonString !== 'string') {
+            JSON.parse(JSON.stringify(jsonString))
+        } else {
+            JSON.parse(jsonString)
+        }
         return true
     } catch (e) {
         return false
@@ -95,18 +110,31 @@ function isValidJSON(jsonString) {
 }
 
 app.patch('/movies', (req, res) => {
+    
+    let session;
 
-    if (!req.body.sessionId) {
-        return res.status(401).send({error: 'Unauthorized'})
+    if (req.headers.authorization) {
+        let sessionId = req.headers.authorization
 
-    } else if (req.body.isAdmin === 'false') {
+        session = sessions.find((session) => session.id === sessionId)
+
+        if (!session) {
+            return res.status(401).send({error: 'Unauthorized'})
+        }
+    } else {
+        return res.status(401).send({error: 'Missing authorization data'})
+    }
+
+    var user = users.find((user) => user.id === session.userId)
+
+    if (user.isAdmin === 'false') {
         return res.status(403).send({error: 'Forbidden'})
     
-    } else if (isValidJSON === false) {
+    } else if (isValidJSON(req.body) === false) {
         return res.status(400).send({error: 'Unexpected end of JSON input'})
-        
-    } else if (req.body.name === '') {
-        return res.status(400).send({error: 'Invalid title'})
+
+    } else if (!req.body.name || (typeof req.body.name === 'string') && req.body.name.trim() === '') {
+        return res.status(400).send({error: "Invalid title"})
 
     } else {
         return res.status(204).end()
@@ -120,5 +148,6 @@ app.delete('/sessions', (req, res) => {
 })
 
 app.listen(process.env.PORT, () => {
+    console.clear()
     console.log(`App running at http://localhost:${process.env.PORT}. Documentation at http://localhost:${process.env.PORT}/docs`)
 })
