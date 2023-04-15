@@ -5,6 +5,8 @@ const Session = require('./models/session');
 require('dotenv').config()
 
 app.use(express.json())
+app.use(express.urlencoded({ extended: true }))
+
 
 YAML = require('yamljs');
 const swaggerDocument = YAML.load('swagger.yml');
@@ -37,7 +39,7 @@ const users = [
     {id: 2, email: "User", password: "Password", isAdmin: false}
 ]
 
-let sessions = [
+var sessions = [
     {id: 1, userId: 1}
 ]
 
@@ -48,40 +50,121 @@ app.get('/movies', (req, res) => {
     res.send(movies);
 })
 
+function isValidJSON(jsonString) {
+    try {
+        if (typeof jsonString !== 'string') {
+            JSON.parse(JSON.stringify(jsonString))
+        } else {
+            JSON.parse(jsonString)
+        }
+        return true
+    } catch (e) {
+        return false
+    }
+}
+
+function checkAuth(req, res) {
+
+    try {
+
+        if (req.headers.authorization) {
+            let sessionId = req.headers.authorization
+
+            session = sessions.find((session) => session.id === sessionId)
+
+            if (!session) {
+                return res.status(401).send({error: 'Unauthorized'})
+            }
+        } else {
+            return res.status(401).send({error: 'Missing authorization data'})
+        }
+
+        var user = users.find((user) => user.id === session.userId)
+
+        return user.isAdmin
+
+    } catch (e) {
+        return res.status(401).send({error: 'Unauthorized'})
+    }
+}
+
 app.post('/sessions', (req, res) => {
-    if (!req.body.email || !req.body.password) {
+
+    if (!req.headers.authorization) {
+        return res.status(400).send({error: 'Missing login credentials'})
+    }
+
+    const base64Credentials = req.headers.authorization.split(' ')[1];
+    const credentials = Buffer.from(base64Credentials, 'base64').toString('ascii');
+    const [reqEmail, reqPassword] = credentials.split(':');
+
+    if (!reqEmail || !reqPassword || reqEmail === 'null' && reqPassword === 'null') {
         return res.status(400).send({error: 'One or all params are missing'})
     }
-    const user = users.find((user) => user.email === req.body.email && user.password === req.body.password);
-    if (!user) {
-        return res.status(401).send({error: 'Unauthorized: email or password is incorrect'})
-    }
-    let newSession = Session.create(user.id);
-    sessions.push(newSession)
-    if (req.body.email === 'Admin') {
-        return res.status(201).send({
-                sessionId: newSession.id,
-                isAdmin: true
-            }
-        )
-    }
-})
 
-app.get('/login', (req, res) => {
-    console.log(req.body)
-    if (req.body.username == 'Admin' && req.body.password == 'Password') {
-        isAdmin = true
-        res.send('You are logged in as Admin')
-    } else
-        res.send({error: 'Wrong creditials'})
+
+    let user = users.find((user) => user.email === reqEmail);
+
+    if (user) {
+        if (user.password === reqPassword) {
+
+            let newSession = Session.create(user.id);
+            sessions.push(newSession)
+
+            return res.status(201).send({
+                sessionId: newSession.id,
+                isAdmin: user.isAdmin
+            })
+
+        } else {
+            return res.status(401).send({error: 'Unauthorized: The password you entered is incorrect'})
+        }
+        
+    } else {
+        return res.status(401).send({error: 'Unauthorized: The email you entered is not registered'})
+    }
 })
 
 app.post('/movies', (req, res) => {
-    if (!req.body.name || !req.body.rating || !req.body.year || !req.body.poster) {
+
+    let isUserAdmin = checkAuth(req, res)
+
+    if (isUserAdmin === false) {
+        return res.status(403).send({error: 'Forbidden'})
+    
+    } else if (isValidJSON(req.body) === false) {
+        return res.status(400).send({error: 'Unexpected end of JSON input'})
+
+    } else if (!req.body.name || !req.body.rating || !req.body.year || !req.body.poster) {
         return res.status(400).send({error: 'One or all params are missing'})
+
+    } else if (!req.body.name || (typeof req.body.name === 'string') && req.body.name.trim() === '') {
+        return res.status(400).send({error: "Missing title"})
+
     } else {
-        return res.status(201).end()
+        return res.status(204).end()
     }
+
+})
+
+
+app.patch('/movies', (req, res) => {
+    
+    let isUserAdmin = checkAuth(req, res)
+
+    if (isUserAdmin === false) {
+        return res.status(403).send({error: 'Forbidden'})
+    
+    } else if (isValidJSON(req.body) === false) {
+        return res.status(400).send({error: 'Unexpected end of JSON input'})
+
+    } else if (!req.body.name || (typeof req.body.name === 'string') && req.body.name.trim() === '') {
+        return res.status(400).send({error: "Invalid title"})
+
+    } else {
+        return res.status(204).end()
+    }
+
 })
 
 app.delete('/sessions', (req, res) => {
@@ -90,5 +173,6 @@ app.delete('/sessions', (req, res) => {
 })
 
 app.listen(process.env.PORT, () => {
+    console.clear()
     console.log(`App running at http://localhost:${process.env.PORT}. Documentation at http://localhost:${process.env.PORT}/docs`)
 })
