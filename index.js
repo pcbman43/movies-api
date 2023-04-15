@@ -127,9 +127,9 @@ app.post('/sessions', (req, res) => {
 
 app.post('/movies', (req, res) => {
 
-    let user = checkAuth(req, res)
-    
-    if (user.isAdmin === 'false') {
+    let isUserAdmin = checkAuth(req, res)
+
+    if (isUserAdmin === false) {
         return res.status(403).send({error: 'Forbidden'})
     
     } else if (isValidJSON(req.body) === false) {
@@ -150,9 +150,9 @@ app.post('/movies', (req, res) => {
 
 app.patch('/movies', (req, res) => {
     
-    let user = checkAuth(req, res)
+    let isUserAdmin = checkAuth(req, res)
 
-    if (user.isAdmin === 'false') {
+    if (isUserAdmin === false) {
         return res.status(403).send({error: 'Forbidden'})
     
     } else if (isValidJSON(req.body) === false) {
