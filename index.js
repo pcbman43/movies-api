@@ -70,7 +70,7 @@ function checkAuth(req, res) {
         if (req.headers.authorization) {
             let sessionId = req.headers.authorization
 
-            session = sessions.find((session) => session.id === sessionId)
+            let session = sessions.find((session) => session.id === sessionId)
 
             if (!session) {
                 return res.status(401).send({error: 'Unauthorized'})

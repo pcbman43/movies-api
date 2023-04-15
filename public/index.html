@@ -35,7 +35,8 @@
             <td>{{ movie.rating }}</td>
             <td>{{ movie.year }}</td>
             <td><img style="height:128px; width: 128px" :src="movie.poster" :alt="movie.name"></td>
-            <td v-if="isAdmin"><button type="button" @click="showEditMovieModal(movie.id)">Edit</button></td>
+            <td v-if="isAdmin"><button type="button" @click="showEditMovieModal(movie.id)">Edit</button>
+            <button type="button" @click="">Delete</button></td>
         </tr>
     </table>
 
