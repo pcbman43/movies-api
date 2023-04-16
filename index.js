@@ -70,7 +70,7 @@ function checkAuth(req, res) {
         if (req.headers.authorization) {
             let sessionId = req.headers.authorization
 
-            let session = sessions.find((session) => session.id === sessionId)
+            var session = sessions.find((session) => session.id === sessionId)
 
             if (!session) {
                 return res.status(401).send({error: 'Unauthorized'})
@@ -160,6 +160,22 @@ app.patch('/movies', (req, res) => {
 
     } else if (!req.body.name || (typeof req.body.name === 'string') && req.body.name.trim() === '') {
         return res.status(400).send({error: "Invalid title"})
+
+    } else {
+        return res.status(204).end()
+    }
+
+})
+
+app.delete('/movies', (req, res) => {
+
+    let isUserAdmin = checkAuth(req, res)
+
+    if (isUserAdmin === false) {
+        return res.status(403).send({error: 'Forbidden'})
+    
+    } else if (isValidJSON(req.body) === false) {
+        return res.status(400).send({error: 'Unexpected end of JSON input'})
 
     } else {
         return res.status(204).end()
