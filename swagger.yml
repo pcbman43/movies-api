@@ -18,7 +18,7 @@ paths:
                                     $ref: '#/components/schemas/Movie'
                     description: Successful response - returns an array of `Movie` entities.
             operationId: getMovies
-            summary: List All Movies
+            summary: Get a list of every movie
             description: Gets a list of all `Movie` entities.
         post:
             requestBody:
@@ -58,7 +58,7 @@ paths:
                                         name: Movie 1
                                         image: >-
                                             data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAIAQMAAAD+wSzIAAAABlBMVEX///+/v7+jQ3Y5AAAADklEQVQI12P4AIX8EAgALgAD/aNpbtEAAAAASUVORK5CYII
-                    description: Adds movie to the list of movies
+                    description: Successful response - Adds movie to the list of movies
                 '400':
                     content:
                         application/json:
@@ -102,7 +102,61 @@ paths:
                 -
                     apiKey: []
             operationId: addMovie
-            summary: Add movie to the list
+            summary: Add a movie to the list
+        delete:
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            type: array
+                            items: {}
+                        examples:
+                            '204':
+                                value:
+                                    id: 1
+                required: true
+            responses:
+                '204':
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    type: integer
+                            examples:
+                                '204':
+                                    value:
+                                        id: 1
+                    description: Successful response - removes the selected movie from the list
+                '401':
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    type: integer
+                            examples:
+                                '204':
+                                    value:
+                                        id: 1
+                    description: Will not remove a movie from the list of movies because the user isn't logged in
+                '403':
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    type: integer
+                            examples:
+                                '204':
+                                    value:
+                                        id: 1
+                    description: Will not remove a movie from the list of movies because the user isnt an admin
+            security:
+                -
+                    apiKey: []
+            operationId: deleteMovie
+            summary: Remove a movie from the list
         patch:
             requestBody:
                 content:
@@ -142,7 +196,7 @@ paths:
                                         year: 2004
                                         poster: >-
                                             data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAIAQMAAAD+wSzIAAAABlBMVEX///+/v7+jQ3Y5AAAADklEQVQI12P4AIX8EAgALgAD/aNpbtEAAAAASUVORK5CYII
-                    description: Modifies a movie in the list of movies
+                    description: Successful response - Modifies a movie in the list of movies
                 '400':
                     content:
                         application/json:
