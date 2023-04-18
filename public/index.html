@@ -35,7 +35,10 @@
             <td>{{ movie.rating }}</td>
             <td>{{ movie.year }}</td>
             <td><img style="height:128px; width: 128px" :src="movie.poster" :alt="movie.name"></td>
-            <td v-if="isAdmin"><button type="button" @click="showEditMovieModal(movie.id)">Edit</button></td>
+            <td v-if="isAdmin">
+                <button type="button" @click="showEditMovieModal(movie.id)">Edit</button>
+                <button type="button" @click="showDeleteMovieModal(movie.id)">Delete</button>
+            </td>
         </tr>
     </table>
 
@@ -123,6 +126,24 @@
         </div>
     </div>
 
+    <div class="modal" id="deleteMovieModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" aria-label="Close" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Confirm that you want to delete: </p><br>
+                    <h3>{{ modals.deleteMovie.name }} ({{ modals.deleteMovie.year }})</h3>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" @click="deleteMovie" class="btn btn-danger">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
 </div>
 
@@ -168,6 +189,11 @@
                         rating: null,
                         year: null,
                         poster: null
+                    },
+                    deleteMovie: {
+                        id: null,
+                        name: null,
+                        year: null
                     }
                 }
             }
@@ -183,6 +209,7 @@
             }
 
             this.movies = JSON.parse(localStorage.getItem('movieList'))
+            console.log(JSON.stringify(this.movies))
         },
 
         methods: {
@@ -293,9 +320,11 @@
             },
 
             editMovie: async function() {
-
+                
+                var movieIndex = this.movies.findIndex(selectedMovie => selectedMovie.id === this.modals.editMovie.id)
+                
                 if (this.modals.editMovie.poster === null) {
-                    this.modals.editMovie.poster = this.movies[this.modals.editMovie.id-1].poster
+                    this.modals.editMovie.poster = this.movies[movieIndex].poster
                 }
 
                 let response = await fetch('/movies', {
@@ -315,7 +344,6 @@
 
                 .then(response => {
                     if (response.ok) {
-                        var movieIndex = this.movies.findIndex(selectedMovie => selectedMovie.id === this.modals.editMovie.id)
                         this.movies[movieIndex].name = this.modals.editMovie['name']
                         this.movies[movieIndex].rating = this.modals.editMovie['rating']
                         this.movies[movieIndex].year = this.modals.editMovie['year']
@@ -337,6 +365,40 @@
 
             },
 
+            deleteMovie: async function() {
+
+                let response = await fetch('/movies', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json;charset=utf-8',
+                        'Authorization': this.sessionId
+                    },
+                    body: JSON.stringify({
+                        id: this.modals.deleteMovie.id
+                    })
+                })
+
+                .then(response => {
+                    if (response.ok) {
+                        try {
+                            var movieIndex = this.movies.findIndex(selectedMovie => selectedMovie.id === this.modals.deleteMovie.id)
+                            this.movies.splice(movieIndex, 1)
+                        } catch (error) {
+                            console.error('Error:', error);
+                        }
+
+                        localStorage.setItem('movieList', JSON.stringify(this.movies))
+                        this.modals.deleteMovie.id = null
+                        this.modalHandler.hide()
+                    }
+                })
+
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+
+            },
+
             showAddMovieModal: function () {
                 this.modalHandler = new bootstrap.Modal(document.getElementById('addMovieModal'), {})
                 this.modalHandler.show()
@@ -344,10 +406,20 @@
 
             showEditMovieModal: function (movieId) {
                 this.modalHandler = new bootstrap.Modal(document.getElementById('editMovieModal'), {})
-                this.modals.editMovie.id = this.movies[movieId-1]['id']
-                this.modals.editMovie.name = this.movies[movieId-1]['name']
-                this.modals.editMovie.rating = this.movies[movieId-1]['rating']
-                this.modals.editMovie.year = this.movies[movieId-1]['year']
+                var movieIndex = this.movies.findIndex(selectedMovie => selectedMovie.id === movieId)
+                this.modals.editMovie.id = this.movies[movieIndex]['id']
+                this.modals.editMovie.name = this.movies[movieIndex]['name']
+                this.modals.editMovie.rating = this.movies[movieIndex]['rating']
+                this.modals.editMovie.year = this.movies[movieIndex]['year']
+                this.modalHandler.show()
+            },
+
+            showDeleteMovieModal: function (movieId) {
+                this.modalHandler = new bootstrap.Modal(document.getElementById('deleteMovieModal'), {})
+                var movieIndex = this.movies.findIndex(selectedMovie => selectedMovie.id === movieId)
+                this.modals.deleteMovie.id = this.movies[movieIndex]['id']
+                this.modals.deleteMovie.name = this.movies[movieIndex]['name']
+                this.modals.deleteMovie.year = this.movies[movieIndex]['year']
                 this.modalHandler.show()
             },
 
