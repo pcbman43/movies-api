@@ -2,11 +2,17 @@ const express = require('express')
 const app = express()
 const swaggerUi = require('swagger-ui-express');
 const Session = require('./models/session');
+const fs = require('fs');
+const https = require('https')
 require('dotenv').config()
 
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
+const credentials = {
+    key: fs.readFileSync(process.env.KEY),
+    cert: fs.readFileSync(process.env.CERT)
+}
 
 YAML = require('yamljs');
 const swaggerDocument = YAML.load('swagger.yml');
@@ -87,6 +93,10 @@ function checkAuth(req, res) {
         return res.status(401).send({error: 'Unauthorized'})
     }
 }
+
+app.get('/', (req, res) => {
+    res.send('Hello World!')
+})
 
 app.post('/sessions', (req, res) => {
 
@@ -188,7 +198,13 @@ app.delete('/sessions', (req, res) => {
     res.status(204).end()
 })
 
-app.listen(process.env.PORT, () => {
-    console.clear()
-    console.log(`App running at http://localhost:${process.env.PORT}. Documentation at http://localhost:${process.env.PORT}/docs`)
-})
+var httpsServer = https.createServer(credentials, app);
+
+try {
+    httpsServer.listen(process.env.PORT, () => {
+        console.clear()
+        console.log(`App running at https://localhost:${process.env.PORT}. Documentation at https://localhost:${process.env.PORT}/docs`)
+    })
+} catch (e) {
+    console.log(e)
+}
