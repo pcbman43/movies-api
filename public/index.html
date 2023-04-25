@@ -163,6 +163,30 @@
         return '';
     }
 
+    try {
+
+        var socket = new WebSocket('wss://localhost:4000');
+        
+        
+    } catch (e) {
+        console.log(`Error in WS connection: "${e}"`);
+    }
+    
+    socket.addEventListener('open', function (event) {
+        console.log('Connected to WS server');
+    });
+
+    socket.addEventListener('close', function (event) {
+        console.log('Disconnected from WS server');
+    });
+
+    socket.addEventListener('message', function (event) {
+        //console.log('Message from server ', event.data);
+        if (event.data === 'update') {
+            app.getMovies()
+        }
+    })
+
     const {createApp} = Vue
     const app = createApp({
         data() {
@@ -204,12 +228,8 @@
             this.sessionId = localStorage.getItem('sessionId')
             this.isAdmin = localStorage.getItem('isAdmin')
 
-            if (localStorage.getItem('movieList') === null) {
-                this.getMovies()
-            }
-
-            this.movies = JSON.parse(localStorage.getItem('movieList'))
-            console.log(JSON.stringify(this.movies))
+            this.getMovies()
+            //console.log(JSON.stringify(this.movies))
         },
 
         methods: {
@@ -306,15 +326,6 @@
                 })
 
                 if (response.ok) {
-                    this.movies.push({
-                        id: this.modals.addMovie.id,
-                        name: this.modals.addMovie.name,
-                        rating: this.modals.addMovie.rating,
-                        year: this.modals.addMovie.year,
-                        poster: this.modals.addMovie.poster
-                    })
-
-                    localStorage.setItem('movieList', JSON.stringify(this.movies))
                     this.modalHandler.hide()
                 }
             },
@@ -349,7 +360,6 @@
                         this.movies[movieIndex].year = this.modals.editMovie['year']
                         this.movies[movieIndex].poster = this.modals.editMovie['poster']
 
-                        localStorage.setItem('movieList', JSON.stringify(this.movies))
                         this.modals.editMovie.id = null
                         this.modals.editMovie.name = null
                         this.modals.editMovie.rating = null
@@ -380,14 +390,6 @@
 
                 .then(response => {
                     if (response.ok) {
-                        try {
-                            var movieIndex = this.movies.findIndex(selectedMovie => selectedMovie.id === this.modals.deleteMovie.id)
-                            this.movies.splice(movieIndex, 1)
-                        } catch (error) {
-                            console.error('Error:', error);
-                        }
-
-                        localStorage.setItem('movieList', JSON.stringify(this.movies))
                         this.modals.deleteMovie.id = null
                         this.modalHandler.hide()
                     }
@@ -398,7 +400,7 @@
                 });
 
             },
-
+            
             showAddMovieModal: function () {
                 this.modalHandler = new bootstrap.Modal(document.getElementById('addMovieModal'), {})
                 this.modalHandler.show()
