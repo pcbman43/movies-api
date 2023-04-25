@@ -12,6 +12,9 @@ npm install
 cp .env.sample .env
 ```
 
+## For HTTPS to work, the '.env' file must be setup with the paths of a private key file and a .crt file
+
+
 ## Starting the app
 ```
 npm start
