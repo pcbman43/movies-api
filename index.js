@@ -4,7 +4,10 @@ const swaggerUi = require('swagger-ui-express');
 const Session = require('./models/session');
 const fs = require('fs');
 const https = require('https')
+const WebSocket = require('ws')
 require('dotenv').config()
+const path = require('path');
+const dirname__ = path.resolve();
 
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
@@ -14,31 +17,20 @@ const credentials = {
     cert: fs.readFileSync(process.env.CERT)
 }
 
+const httpsServer = https.createServer(credentials, app);
+const WebSocketServer = new WebSocket.Server({server: httpsServer});
+
+process.on('SIGINT', () => {
+    console.log('Closing WebSocket server');
+    WebSocketServer.close();
+    process.exit();
+});
+
 YAML = require('yamljs');
 const swaggerDocument = YAML.load('swagger.yml');
-const movies = [
-    {
-        id: 1,
-        name: 'movie1',
-        rating: 3,
-        year: 2004,
-        poster: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAIAQMAAAD+wSzIAAAABlBMVEX///+/v7+jQ3Y5AAAADklEQVQI12P4AIX8EAgALgAD/aNpbtEAAAAASUVORK5CYII'
-    },
-    {
-        id: 2,
-        name: 'movie2',
-        rating: 4,
-        year: 1993,
-        poster: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAIAAADTED8xAAADMElEQVR4nOzVwQnAIBQFQYXff81RUkQCOyDj1YOPnbXWPmeTRef+/3O/OyBjzh3CD95BfqICMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMO0TAAD//2Anhf4QtqobAAAAAElFTkSuQmCC'
-    },
-    {
-        id: 3,
-        name: 'movie3',
-        rating: 5,
-        year: 2022,
-        poster: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAIAAABMXPacAAACsklEQVR4nOzdu0vVfxzH8d+RLz/biggMQwh1i4ZASqKplgiHCgkiK7ouXTCKaAkrHILA0EwzlwxDoxDhTEYXulJBhouUYhxwraApqJP0N7wgeC7Px/z6TE/e27kUtwa3/JcoGhui/cXyyWg/PXEq2i9raov2Z+sr0b5893q0P/2yK9rXRGv9cwaAGQBmAJgBYAaAGQBmAJgBYAaAGQBmAJgBYAaAGQBW/KrMRA9aRpei/ZdKXbQvX3oR7Z/c6Y/2rdd+RPupPQ+i/fBYbbT3AmAGgBkAZgCYAWAGgBkAZgCYAWAGgBkAZgCYAWAGgBkAVlrxqDN6MNA1FO1blp+I9qtHjkf7mfl90X7o971oXz8xEu2PtWffb/ACYAaAGQBmAJgBYAaAGQBmAJgBYAaAGQBmAJgBYAaAGQBWaj7wPnpwe9XNaF/7Jvt8/f5nf6L9tsnhaL9yel20721oivaTc6+ivRcAMwDMADADwAwAMwDMADADwAwAMwDMADADwAwAMwDMALCiY+3V6MGuvu/RfqrzSLT/vH422o/OlaN9T3Uw2i+0Po72/Tfmo70XADMAzAAwA8AMADMAzAAwA8AMADMAzAAwA8AMADMAzACw0uz/r6MHHQPt0b67ZzHanzmUfX6/+9NYtK959yHaH20/H+3ffj0c7b0AmAFgBoAZAGYAmAFgBoAZAGYAmAFgBoAZAGYAmAFgBoCVrmzojR4Mbv4W7eueXoj2DUvVaL8wnv3/cNHWF+1/Nmf/T7D4vDHaewEwA8AMADMAzAAwA8AMADMAzAAwA8AMADMAzAAwA8AMACs2dWS/d189OB7t+7duj/ZrdmS/5/Nx58Zof//cw2h/eXddtO8d2BvtvQCYAWAGgBkAZgCYAWAGgBkAZgCYAWAGgBkAZgCYAWAGgP0NAAD//1nhZOAe3V6jAAAAAElFTkSuQmCC'
-    }
-]
+const moviesFile = './public/movie-data/movies.json';
+
+var movies = require(moviesFile);
 
 const users = [
     {id: 1, email: "Admin", password: "Password", isAdmin: true},
@@ -56,6 +48,141 @@ app.get('/movies', (req, res) => {
     res.send(movies);
 })
 
+fs.watch(moviesFile, (eventType, filename) => {
+
+    if (eventType === 'change') {
+        fs.readFile(moviesFile, (error, data) => {
+            if (error) {
+                console.error(error);
+                return;
+            }
+            try {
+                if (data.length > 0) {
+                    movies = JSON.parse(data)
+                    updateClients()
+                } else {
+                    //console.log('Data is empty')
+                    return
+                }
+            } catch (error) {
+                console.error(`Error parsing JSON: ${error}`);
+                console.log(`recieved data - ${data}`)
+            }
+        });
+    }
+});
+
+
+
+function addMovie(body) {
+    var posterExt = body.poster.substring(body.poster.indexOf('/') + 1, body.poster.indexOf(';'));
+    var posterFile = `./public/movie-data/posters/${body.id}.${posterExt}`;
+    var posterPublicFile = `/movie-data/posters/${body.id}.${posterExt}`;
+    var imageData = body.poster.replace(/^data:image\/\w+;base64,/, "");
+
+    fs.writeFile(posterFile, imageData, 'base64', (err) => {
+        if (err) {
+            console.log('Error writing poster file:', err);
+            return;
+        }
+
+        body.poster = posterPublicFile;
+        movies.push(body);
+        fs.writeFile(moviesFile, JSON.stringify(movies, null, 4), (err) => {
+            if (err) {
+                console.log('Error writing movies file:', err);
+                return;
+            }
+        });
+    });
+}
+
+async function updateMovie(body) {
+    const index = movies.findIndex((movie) => movie.id === body.id);
+
+    if (index !== -1) {
+        const oldPosterFile = path.join(dirname__, 'public', movies[index].poster);
+        try {
+            const oldImageData = await fs.promises.readFile(oldPosterFile, { encoding: 'base64' });
+
+            if (movies[index].poster !== body.poster) {
+                if (body.poster.indexOf('base64') === -1) {
+                    console.log('Error: poster data is not base64');
+                    throw new Error('Poster data is not base64');
+                }
+
+                if (oldImageData !== body.poster) {
+                    try {
+                        await fs.promises.unlink(oldPosterFile);
+                    } catch (err) {
+                        return;
+                    }
+
+                    var newPosterExt = body.poster.substring(body.poster.indexOf('/') + 1, body.poster.indexOf(';'));
+                    var oldFileName = path.basename(movies[index].poster, path.extname(movies[index].poster))
+                    if (oldFileName.includes('v')) {
+                        try {
+                            var oldPosterVersion = Number(oldFileName.replace(`${movies[index].id}.v`, ''));
+                        } catch (err) {
+                            console.log('Error converting oldPosterVersion to number')
+                            return;
+                        }
+                        var newPosterFile = `./public/movie-data/posters/${body.id}.v${oldPosterVersion+=1}.${newPosterExt}`;
+                    } else {
+                        var newPosterFile = `./public/movie-data/posters/${body.id}.v2.${newPosterExt}`;
+                    }
+                    const newImageData = body.poster.replace(/^data:image\/\w+;base64,/, "");
+                    await fs.promises.writeFile(newPosterFile, newImageData, 'base64');
+                    movies[index] = body;
+                    const newPosterPublicFile = newPosterFile.substring(newPosterFile.indexOf('/movie-data'));
+                    movies[index].poster = newPosterPublicFile;
+                } else {
+                    movies[index] = body;
+                }
+            } else {
+                movies[index] = body;
+            }
+
+            await fs.promises.writeFile(moviesFile, JSON.stringify(movies, null, 4));
+        } catch (err) {
+            console.log('Error:', err);
+        }
+    }
+}
+
+function deleteMovie (body) {
+    const index = movies.findIndex((movie) => movie.id === body.id);
+    if (index !== -1) { 
+        var posterFile = path.join(dirname__, 'public', movies[index].poster)
+        fs.unlink(posterFile, (err) => {
+            if (err) {
+                console.log('Error deleting poster file:', err);
+                return;
+            }
+        });
+
+        movies.splice(index, 1);
+    }
+
+
+    fs.writeFile(moviesFile, JSON.stringify(movies, null, 4), (err) => {
+        if (err) {
+            console.log('Error writing movies file:', err);
+            return;
+        }
+    });
+
+}
+
+function updateClients () {
+    WebSocketServer.clients.forEach(function each(client) {
+        if (client.readyState === WebSocket.OPEN) {
+            client.send('update');
+        }
+    });
+}
+
+
 function isValidJSON(jsonString) {
     try {
         if (typeof jsonString !== 'string') {
@@ -69,34 +196,31 @@ function isValidJSON(jsonString) {
     }
 }
 
-function checkAuth(req, res) {
-
+function checkAuth(req, res, next) {
     try {
+    if (req.headers.authorization) {
+        let sessionId = req.headers.authorization;
+        var session = sessions.find((session) => session.id === sessionId);
 
-        if (req.headers.authorization) {
-            let sessionId = req.headers.authorization
-
-            var session = sessions.find((session) => session.id === sessionId)
-
-            if (!session) {
-                return res.status(401).send({error: 'Unauthorized'})
-            }
-        } else {
-            return res.status(401).send({error: 'Missing authorization data'})
+        if (!session) {
+            return res.status(401).send({ error: "Unauthorized" });
         }
 
-        var user = users.find((user) => user.id === session.userId)
+        var user = users.find((user) => user.id === session.userId);
 
-        return user.isAdmin
-
+        if (user.isAdmin) {
+            next();
+        } else {
+            return res.status(403).send({ error: "Forbidden" });
+        }
+        
+    } else {
+        return res.status(401).send({ error: "Missing authorization data" });
+    }
     } catch (e) {
-        return res.status(401).send({error: 'Unauthorized'})
+        return res.status(401).send({ error: "Unauthorized" });
     }
 }
-
-app.get('/', (req, res) => {
-    res.send('Hello World!')
-})
 
 app.post('/sessions', (req, res) => {
 
@@ -135,14 +259,9 @@ app.post('/sessions', (req, res) => {
     }
 })
 
-app.post('/movies', (req, res) => {
-
-    let isUserAdmin = checkAuth(req, res)
-
-    if (isUserAdmin === false) {
-        return res.status(403).send({error: 'Forbidden'})
+app.post('/movies', checkAuth, (req, res) => {
     
-    } else if (isValidJSON(req.body) === false) {
+    if (isValidJSON(req.body) === false) {
         return res.status(400).send({error: 'Unexpected end of JSON input'})
 
     } else if (!req.body.name || !req.body.rating || !req.body.year || !req.body.poster) {
@@ -152,42 +271,35 @@ app.post('/movies', (req, res) => {
         return res.status(400).send({error: "Missing title"})
 
     } else {
+        addMovie(req.body)
         return res.status(204).end()
     }
 
 })
 
 
-app.patch('/movies', (req, res) => {
+app.patch('/movies', checkAuth, (req, res) => {
     
-    let isUserAdmin = checkAuth(req, res)
-
-    if (isUserAdmin === false) {
-        return res.status(403).send({error: 'Forbidden'})
-    
-    } else if (isValidJSON(req.body) === false) {
+    if (isValidJSON(req.body) === false) {
         return res.status(400).send({error: 'Unexpected end of JSON input'})
-
+        
     } else if (!req.body.name || (typeof req.body.name === 'string') && req.body.name.trim() === '') {
         return res.status(400).send({error: "Invalid title"})
-
+        
     } else {
+        updateMovie(req.body)
         return res.status(204).end()
     }
 
 })
 
-app.delete('/movies', (req, res) => {
-
-    let isUserAdmin = checkAuth(req, res)
-
-    if (isUserAdmin === false) {
-        return res.status(403).send({error: 'Forbidden'})
+app.delete('/movies', checkAuth, (req, res) => {
     
-    } else if (isValidJSON(req.body) === false) {
+    if (isValidJSON(req.body) === false) {
         return res.status(400).send({error: 'Unexpected end of JSON input'})
 
     } else {
+        deleteMovie(req.body)
         return res.status(204).end()
     }
 
@@ -198,11 +310,10 @@ app.delete('/sessions', (req, res) => {
     res.status(204).end()
 })
 
-var httpsServer = https.createServer(credentials, app);
 
 try {
     httpsServer.listen(process.env.PORT, () => {
-        console.clear()
+        //console.clear()
         console.log(`App running at https://localhost:${process.env.PORT}. Documentation at https://localhost:${process.env.PORT}/docs`)
     })
 } catch (e) {

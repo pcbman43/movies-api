@@ -1,0 +1,23 @@
+[
+    {
+        "id": 1,
+        "name": "movie1",
+        "rating": 3,
+        "year": 2004,
+        "poster": "/movie-data/posters/1.png"
+    },
+    {
+        "id": 2,
+        "name": "movie2",
+        "rating": 4,
+        "year": 1993,
+        "poster": "/movie-data/posters/2.png"
+    },
+    {
+        "id": 3,
+        "name": "movie3",
+        "rating": 5,
+        "year": 2022,
+        "poster": "/movie-data/posters/3.png"
+    }
+]
