@@ -232,6 +232,31 @@ paths:
                     apiKey: []
             operationId: editMovie
             summary: Edit movie info in the list
+    /logs:
+        get:
+            responses:
+                '200':
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    type: string
+                            examples:
+                                200_OK:
+                                    value:
+                                        -
+                                            log_id: '1'
+                                            timestamp: '2023-04-26 20:10:08'
+                                            http_method: DELETE
+                                        -
+                                            log_id: '2'
+                                            timestamp: '2023-04-27 13:44:27'
+                                            http_method: DELETE
+                    description: Successful response - returns an array of `Logs` entities.
+            operationId: getLogs
+            summary: Gets a list of logs affecting movies
+            description: Gets a list of all `Logs` entities.
 components:
     schemas:
         Movie:
