@@ -8,6 +8,8 @@ const WebSocket = require('ws')
 require('dotenv').config()
 const path = require('path');
 const dirname__ = path.resolve();
+const { parse } = require('csv-parse/sync');
+const { stringify } = require('csv-stringify');
 
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
@@ -72,7 +74,64 @@ fs.watch(moviesFile, (eventType, filename) => {
     }
 });
 
+const logFile = './movie_logs/logs.csv';
 
+var logs = fs.readFileSync(logFile)
+logs = parse(logs, {columns: true}, (err, output) => {
+    return output;
+});
+
+fs.watch(logFile, (eventType, filename) => {
+    if (eventType === 'change') {
+        fs.readFile(logFile, (error, data) => {
+            if (error) {
+                console.error(error);
+                return;
+            }
+            try {
+                if (data.length > 0) {
+                    logs = parse(data, {columns: true}, (err, output) => {
+                        return output;
+                    });
+                    updateClients('updateLog')
+                } else {
+                    //console.log('Data is empty')
+                    return
+                }
+            } catch (error) {
+                console.error(`Error parsing CSV: ${error}`);
+                console.log(`recieved data - ${data}`)
+            }
+        });
+    }
+});
+
+async function generateLogEntry(req) {
+    var logLength
+    var logContent
+    var data = fs.readFileSync(logFile)
+    var output = parse(data, {columns: false}, (err, output) => {
+        return output;
+    });
+    logContent = await output;
+    logLength = output.length
+
+    console.log(`logLength: ${logLength}`)
+    var logId = logLength.toString();
+    var date = new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '');
+    var logEntryRaw = [logId, date, req.method];
+    logContent.push(logEntryRaw);
+    stringify(logContent, {quoted: true}, (err, output) => {
+        fs.writeFile(logFile, output, (err) => {
+            if (err) {
+                console.log('Error writing log file:', err);
+                return;
+            }
+        });
+    });
+
+    updateClients('updateLog');
+}
 
 function addMovie(body) {
     var posterExt = body.poster.substring(body.poster.indexOf('/') + 1, body.poster.indexOf(';'));
@@ -174,10 +233,14 @@ function deleteMovie (body) {
 
 }
 
-function updateClients () {
+function updateClients(type = 'update') {
     WebSocketServer.clients.forEach(function each(client) {
         if (client.readyState === WebSocket.OPEN) {
-            client.send('update');
+            if (type === 'update') {
+                client.send('update');
+            } else if (type === 'updateLog') {
+                client.send('updateLog');
+            }
         }
     });
 }
@@ -272,11 +335,11 @@ app.post('/movies', checkAuth, (req, res) => {
 
     } else {
         addMovie(req.body)
+        generateLogEntry(req)
         return res.status(204).end()
     }
 
 })
-
 
 app.patch('/movies', checkAuth, (req, res) => {
     
@@ -288,6 +351,7 @@ app.patch('/movies', checkAuth, (req, res) => {
         
     } else {
         updateMovie(req.body)
+        generateLogEntry(req)
         return res.status(204).end()
     }
 
@@ -300,6 +364,7 @@ app.delete('/movies', checkAuth, (req, res) => {
 
     } else {
         deleteMovie(req.body)
+        generateLogEntry(req)
         return res.status(204).end()
     }
 
@@ -310,6 +375,10 @@ app.delete('/sessions', (req, res) => {
     res.status(204).end()
 })
 
+app.get('/logs', (req, res) => {
+    res.status(200).send(logs)
+})
+    
 
 try {
     httpsServer.listen(process.env.PORT, () => {
