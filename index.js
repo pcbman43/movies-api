@@ -307,7 +307,7 @@ app.post('/sessions', async (req, res) => {
 
             return res.status(201).send({
                 sessionId: newSession.id,
-                isAdmin: true
+                isAdmin: false
             })
             
         } catch (e) {
