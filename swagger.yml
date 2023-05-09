@@ -257,6 +257,77 @@ paths:
             operationId: getLogs
             summary: Gets a list of logs affecting movies
             description: Gets a list of all `Logs` entities.
+    /sessions:
+        post:
+            responses:
+                '201':
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    type: string
+                            examples:
+                                Successful login:
+                                    value:
+                                        sessionId: 1
+                                        isAdmin: true
+                    description: Successful response - signs the user in.
+                '400':
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    type: string
+                            examples:
+                                Missing login credentials:
+                                    value:
+                                        error: Missing login credentials
+                                Login unsuccessful:
+                                    value:
+                                        error: Login unsuccessful
+                    description: When authentication data was missing or something went wrong.
+                '401':
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    type: string
+                            examples:
+                                'Unauthorized: The password you entered is incorrect':
+                                    value:
+                                        error: 'Unauthorized: The password you entered is incorrect'
+                                'Unauthorized: The email you entered is not registered':
+                                    value:
+                                        error: 'Unauthorized: The email you entered is not registered'
+                    description: When the authentication data was provided but the details weren't correct.
+            deprecated: false
+            operationId: signIn
+            summary: Signs the user in.
+        delete:
+            responses:
+                '204':
+                    description: Successful response - user is logged out.
+            operationId: signOut
+            summary: Signs the user out.
+    /env:
+        get:
+            responses:
+                '200':
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    type: string
+                            examples:
+                                200_OK:
+                                    value:
+                                        client_id: 123ABC
+                    description: Successful response - returns an object of .env values.
+            summary: Gets .env values for the client-side to use.
 components:
     schemas:
         Movie:
