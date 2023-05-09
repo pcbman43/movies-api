@@ -10,6 +10,7 @@ const path = require('path');
 const dirname__ = path.resolve();
 const { parse } = require('csv-parse/sync');
 const { stringify } = require('csv-stringify');
+const { OAuth2Client } = require('google-auth-library');
 
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
@@ -40,7 +41,7 @@ const users = [
 ]
 
 var sessions = [
-    {id: 1, userId: 1}
+    {id: 1, userId: 1, createdAt: '2023-05-04T08:36:57.652Z'}
 ]
 
 
@@ -49,6 +50,18 @@ app.use(express.static(__dirname + '/public'));
 app.get('/movies', (req, res) => {
     res.send(movies);
 })
+
+const client = new OAuth2Client({
+    clientId: process.env.GOOGLE_CLIENT_ID
+});
+
+async function verify(token) {
+    const ticket = await client.verifyIdToken({
+        idToken: token,
+        audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    return ticket.getPayload();
+}
 
 fs.watch(moviesFile, (eventType, filename) => {
 
@@ -100,7 +113,6 @@ fs.watch(logFile, (eventType, filename) => {
                 }
             } catch (error) {
                 console.error(`Error parsing CSV: ${error}`);
-                console.log(`recieved data - ${data}`)
             }
         });
     }
@@ -116,7 +128,6 @@ async function generateLogEntry(req) {
     logContent = await output;
     logLength = output.length
 
-    console.log(`logLength: ${logLength}`)
     var logId = logLength.toString();
     var date = new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '');
     var logEntryRaw = [logId, date, req.method];
@@ -285,7 +296,24 @@ function checkAuth(req, res, next) {
     }
 }
 
-app.post('/sessions', (req, res) => {
+app.post('/sessions', async (req, res) => {
+
+    if (req.body.hasOwnProperty('credential')) {
+        try {
+            const value = await verify(req.body.credential)
+            
+            let newSession = Session.create(value.email);
+            sessions.push(newSession)
+
+            return res.status(201).send({
+                sessionId: newSession.id,
+                isAdmin: true
+            })
+            
+        } catch (e) {
+            return res.status(400).send({error: 'Login unsuccessful'});
+        }
+    }
 
     if (!req.headers.authorization) {
         return res.status(400).send({error: 'Missing login credentials'})
@@ -378,7 +406,10 @@ app.delete('/sessions', (req, res) => {
 app.get('/logs', (req, res) => {
     res.status(200).send(logs)
 })
-    
+
+app.get('/env', (req, res) => {
+    res.status(200).send({client_id: process.env.GOOGLE_CLIENT_ID})
+})
 
 try {
     httpsServer.listen(process.env.PORT, () => {
