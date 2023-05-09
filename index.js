@@ -364,7 +364,7 @@ app.post('/movies', checkAuth, (req, res) => {
     } else {
         addMovie(req.body)
         generateLogEntry(req)
-        return res.status(204).end()
+        return res.status(201).end()
     }
 
 })

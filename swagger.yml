@@ -7,7 +7,6 @@ paths:
         summary: Path used to manage the list of movies.
         description: 'The REST endpoint/path used to list and create zero or more `Movie` entities. '
         get:
-            requestBody: {}
             responses:
                 '200':
                     content:
@@ -16,6 +15,27 @@ paths:
                                 type: array
                                 items:
                                     $ref: '#/components/schemas/Movie'
+                            examples:
+                                200_OK:
+                                    value:
+                                        -
+                                            id: 1
+                                            name: movie1
+                                            rating: 3
+                                            year: 2004
+                                            poster: /movie-data/posters/1.png
+                                        -
+                                            id: 2
+                                            name: movie2
+                                            rating: 4
+                                            year: 1993
+                                            poster: /movie-data/posters/2.png
+                                        -
+                                            id: 3
+                                            name: movie3
+                                            rating: 5
+                                            year: 2022
+                                            poster: /movie-data/posters/3.png
                     description: Successful response - returns an array of `Movie` entities.
             operationId: getMovies
             summary: Get a list of every movie
@@ -53,11 +73,7 @@ paths:
                                 $ref: '#/components/schemas/Movie'
                             examples:
                                 '201':
-                                    value:
-                                        id: 1
-                                        name: Movie 1
-                                        image: >-
-                                            data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAIAQMAAAD+wSzIAAAABlBMVEX///+/v7+jQ3Y5AAAADklEQVQI12P4AIX8EAgALgAD/aNpbtEAAAAASUVORK5CYII
+                                    value: ''
                     description: Successful response - Adds movie to the list of movies
                 '400':
                     content:
@@ -65,12 +81,15 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/Movie'
                             examples:
-                                '400':
+                                400_BAD_JSON:
                                     value:
-                                        id: 1
-                                        name: ''
-                                        image: >-
-                                            data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAIAQMAAAD+wSzIAAAABlBMVEX///+/v7+jQ3Y5AAAADklEQVQI12P4AIX8EAgALgAD/aNpbtEAAAAASUVORK5CYII
+                                        error: expected end of JSON input
+                                400_MISSING_PARAMS:
+                                    value:
+                                        error: One or all params are missing
+                                400_MISSING_TITLE:
+                                    value:
+                                        error: Missing Title
                     description: When the user is admin but one or more params was incorrect or missing
                 '401':
                     content:
@@ -78,12 +97,12 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/Movie'
                             examples:
-                                '401':
+                                401_UNAUTHORIZED:
                                     value:
-                                        id: 1
-                                        name: Movie 1
-                                        image: >-
-                                            data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAIAQMAAAD+wSzIAAAABlBMVEX///+/v7+jQ3Y5AAAADklEQVQI12P4AIX8EAgALgAD/aNpbtEAAAAASUVORK5CYII
+                                        error: Unauthorized
+                                401_MISSING_AUTH_DATA:
+                                    value:
+                                        error: Missing authorization data
                     description: Will not add a movie to the list of movies because the user isn't logged in
                 '403':
                     content:
@@ -91,12 +110,9 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/Movie'
                             examples:
-                                '403':
+                                403_FORBIDDEN:
                                     value:
-                                        id: 1
-                                        name: Movie 1
-                                        image: >-
-                                            data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAIAQMAAAD+wSzIAAAABlBMVEX///+/v7+jQ3Y5AAAADklEQVQI12P4AIX8EAgALgAD/aNpbtEAAAAASUVORK5CYII
+                                        error: Forbidden
                     description: Will not add a movie to the list of movies because the user isnt an admin
             security:
                 -
@@ -122,23 +138,37 @@ paths:
                             schema:
                                 type: array
                                 items:
-                                    type: integer
+                                    type: string
                             examples:
                                 '204':
-                                    value:
-                                        id: 1
+                                    value: ''
                     description: Successful response - removes the selected movie from the list
+                '400':
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    type: string
+                            examples:
+                                400_BAD_JSON:
+                                    value:
+                                        error: Unexpected end of JSON input
+                    description: When the request body JSON is incorrect.
                 '401':
                     content:
                         application/json:
                             schema:
                                 type: array
                                 items:
-                                    type: integer
+                                    type: string
                             examples:
-                                '204':
+                                401_UNAUTHORIZED:
                                     value:
-                                        id: 1
+                                        error: Unauthorized
+                                401_MISSING_AUTH_DATA:
+                                    value:
+                                        error: Missing authorization data
                     description: Will not remove a movie from the list of movies because the user isn't logged in
                 '403':
                     content:
@@ -146,11 +176,11 @@ paths:
                             schema:
                                 type: array
                                 items:
-                                    type: integer
+                                    type: string
                             examples:
-                                '204':
+                                403_FORBIDDEN:
                                     value:
-                                        id: 1
+                                        error: Forbidden
                     description: Will not remove a movie from the list of movies because the user isnt an admin
             security:
                 -
@@ -183,49 +213,59 @@ paths:
                 required: true
             responses:
                 '204':
-                    headers:
-                        Authorization: {}
                     content:
                         application/json:
+                            schema:
+                                type: array
+                                items:
+                                    type: string
                             examples:
                                 '204':
-                                    value:
-                                        id: 1
-                                        name: movie1
-                                        rating: 3
-                                        year: 2004
-                                        poster: >-
-                                            data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAIAQMAAAD+wSzIAAAABlBMVEX///+/v7+jQ3Y5AAAADklEQVQI12P4AIX8EAgALgAD/aNpbtEAAAAASUVORK5CYII
+                                    value: ''
                     description: Successful response - Modifies a movie in the list of movies
                 '400':
                     content:
                         application/json:
+                            schema:
+                                type: array
+                                items:
+                                    type: string
                             examples:
-                                '400':
+                                400_BAD_JSON:
                                     value:
-                                        id: 1
-                                        name: ''
-                                        rating: 3
-                                        year: 2004
-                                        poster: >-
-                                            data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAIAQMAAAD+wSzIAAAABlBMVEX///+/v7+jQ3Y5AAAADklEQVQI12P4AIX8EAgALgAD/aNpbtEAAAAASUVORK5CYII
-                    description: When the user is admin and title WAS given but was EMPTY
+                                        error: Unexpected end of JSON input
+                                400_INVALID_TITLE:
+                                    value:
+                                        error: Invalid title
+                    description: >-
+                        When the user is admin and title WAS given but was EMPTY OR the request body was
+                        invalid JSON
                 '401':
                     content:
                         application/json:
+                            schema:
+                                type: array
+                                items:
+                                    type: string
                             examples:
-                                '401':
+                                401_UNAUTHORIZED:
                                     value:
-                                        id: 1
-                                        name: movie1
-                                        rating: 3
-                                        year: 2004
-                                        poster: >-
-                                            data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAIAQMAAAD+wSzIAAAABlBMVEX///+/v7+jQ3Y5AAAADklEQVQI12P4AIX8EAgALgAD/aNpbtEAAAAASUVORK5CYII
+                                        error: Unauthorized
+                                401_MISSING_AUTH_DATA:
+                                    value:
+                                        error: Missing authorization data
                     description: When the user was not logged in
                 '403':
                     content:
-                        application/json: {}
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    type: string
+                            examples:
+                                403_FORBIDDEN:
+                                    value:
+                                        error: Forbidden
                     description: When the user was not admin
             security:
                 -
@@ -259,6 +299,33 @@ paths:
             description: Gets a list of all `Logs` entities.
     /sessions:
         post:
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            type: array
+                            items:
+                                type: string
+                        examples:
+                            200_OK:
+                                value:
+                                    username: User
+                                    password: Password
+                            400_MISSING_USERNAME:
+                                value:
+                                    password: Password
+                            400_MISSING_PASSWORD:
+                                value:
+                                    username: User
+                            401_INCORRECT_PASSWORD:
+                                value:
+                                    username: User
+                                    password: wrong
+                            401_UNREGISTERED:
+                                value:
+                                    username: unregistered
+                                    password: Password
+                required: true
             responses:
                 '201':
                     content:
@@ -307,6 +374,8 @@ paths:
             operationId: signIn
             summary: Signs the user in.
         delete:
+            requestBody:
+                required: true
             responses:
                 '204':
                     description: Successful response - user is logged out.
