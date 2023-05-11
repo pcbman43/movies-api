@@ -11,6 +11,7 @@ const dirname__ = path.resolve();
 const { parse } = require('csv-parse/sync');
 const { stringify } = require('csv-stringify');
 const { OAuth2Client } = require('google-auth-library');
+const session = require('./models/session');
 
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
@@ -296,60 +297,6 @@ function checkAuth(req, res, next) {
     }
 }
 
-app.post('/sessions', async (req, res) => {
-
-    if (req.body.hasOwnProperty('credential')) {
-        try {
-            const value = await verify(req.body.credential)
-            
-            let newSession = Session.create(value.email);
-            sessions.push(newSession)
-
-            return res.status(201).send({
-                sessionId: newSession.id,
-                isAdmin: false
-            })
-            
-        } catch (e) {
-            return res.status(400).send({error: 'Login unsuccessful'});
-        }
-    }
-
-    if (!req.headers.authorization) {
-        return res.status(400).send({error: 'Missing login credentials'})
-    }
-
-    const base64Credentials = req.headers.authorization.split(' ')[1];
-    const credentials = Buffer.from(base64Credentials, 'base64').toString('ascii');
-    const [reqEmail, reqPassword] = credentials.split(':');
-
-    if (!reqEmail || !reqPassword || reqEmail === 'null' && reqPassword === 'null') {
-        return res.status(400).send({error: 'One or all params are missing'})
-    }
-
-
-    let user = users.find((user) => user.email === reqEmail);
-
-    if (user) {
-        if (user.password === reqPassword) {
-
-            let newSession = Session.create(user.id);
-            sessions.push(newSession)
-
-            return res.status(201).send({
-                sessionId: newSession.id,
-                isAdmin: user.isAdmin
-            })
-
-        } else {
-            return res.status(401).send({error: 'Unauthorized: The password you entered is incorrect'})
-        }
-        
-    } else {
-        return res.status(401).send({error: 'Unauthorized: The email you entered is not registered'})
-    }
-})
-
 app.post('/movies', checkAuth, (req, res) => {
     
     if (isValidJSON(req.body) === false) {
@@ -398,9 +345,74 @@ app.delete('/movies', checkAuth, (req, res) => {
 
 })
 
+app.post('/sessions', async (req, res) => {
+
+    if (req.body.hasOwnProperty('credential')) {
+        try {
+            const value = await verify(req.body.credential)
+            
+            let newSession = Session.create(value.email);
+            sessions.push(newSession)
+
+            return res.status(201).send({
+                sessionId: newSession.id,
+                isAdmin: false
+            })
+            
+        } catch (e) {
+            return res.status(400).send({error: 'Login unsuccessful'});
+        }
+    }
+
+    if (!req.headers.authorization) {
+        return res.status(400).send({error: 'Missing login credentials'})
+    }
+
+    const base64Credentials = req.headers.authorization.split(' ')[1];
+    const credentials = Buffer.from(base64Credentials, 'base64').toString('ascii');
+    const [reqEmail, reqPassword] = credentials.split(':');
+
+    if (!reqEmail || !reqPassword || reqEmail === 'null' && reqPassword === 'null') {
+        return res.status(400).send({error: 'One or all params are missing'})
+    }
+
+
+    let user = users.find((user) => user.email === reqEmail);
+
+    if (user) {
+        if (user.password === reqPassword) {
+
+            let newSession = Session.create(user.id);
+            sessions.push(newSession)
+
+            console.log('adding new session object')
+            console.log(sessions)
+
+            return res.status(201).send({
+                sessionId: newSession.id,
+                isAdmin: user.isAdmin
+            })
+
+        } else {
+            return res.status(401).send({error: 'Unauthorized: The password you entered is incorrect'})
+        }
+        
+    } else {
+        return res.status(401).send({error: 'Unauthorized: The email you entered is not registered'})
+    }
+})
+
+
 app.delete('/sessions', (req, res) => {
-    sessions = sessions.filter((session) => session.id === req.body.sessionId);
-    res.status(204).end()
+    try {
+        let clientId = req.headers.authorization;
+        console.log(sessions)
+        sessions = sessions.filter((session) => session.id !== clientId);
+        console.log(sessions)
+        res.status(204).end()
+    } catch (e) {
+        return res.status(400).send({error: 'Missing sessionId'})
+    }
 })
 
 app.get('/logs', (req, res) => {

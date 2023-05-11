@@ -19,12 +19,5 @@
         "rating": 5,
         "year": 2022,
         "poster": "/movie-data/posters/3.png"
-    },
-    {
-        "id": 4,
-        "name": "333333",
-        "rating": "2",
-        "year": "2",
-        "poster": "/movie-data/posters/4.png"
     }
 ]

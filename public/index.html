@@ -589,7 +589,7 @@
                     'Content-Type': 'application/json'
                 };
                 if (this.sessionId) {
-                    headers.Authorization = "Bearer " + this.sessionId;
+                    headers.Authorization = this.sessionId;
                 }
                 return fetch(url, {
                     method: method,

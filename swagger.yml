@@ -129,19 +129,10 @@ paths:
                         examples:
                             '204':
                                 value:
-                                    id: 1
+                                    id: 4
                 required: true
             responses:
                 '204':
-                    content:
-                        application/json:
-                            schema:
-                                type: array
-                                items:
-                                    type: string
-                            examples:
-                                '204':
-                                    value: ''
                     description: Successful response - removes the selected movie from the list
                 '400':
                     content:
@@ -197,7 +188,7 @@ paths:
                             patch_204:
                                 value:
                                     id: 1
-                                    name: movie1
+                                    name: movie10
                                     rating: 3
                                     year: 2004
                                     poster: >-
@@ -299,33 +290,6 @@ paths:
             description: Gets a list of all `Logs` entities.
     /sessions:
         post:
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            type: array
-                            items:
-                                type: string
-                        examples:
-                            200_OK:
-                                value:
-                                    username: User
-                                    password: Password
-                            400_MISSING_USERNAME:
-                                value:
-                                    password: Password
-                            400_MISSING_PASSWORD:
-                                value:
-                                    username: User
-                            401_INCORRECT_PASSWORD:
-                                value:
-                                    username: User
-                                    password: wrong
-                            401_UNREGISTERED:
-                                value:
-                                    username: unregistered
-                                    password: Password
-                required: true
             responses:
                 '201':
                     content:
@@ -371,14 +335,18 @@ paths:
                                         error: 'Unauthorized: The email you entered is not registered'
                     description: When the authentication data was provided but the details weren't correct.
             deprecated: false
+            security:
+                -
+                    BasicAuth: []
             operationId: signIn
             summary: Signs the user in.
         delete:
-            requestBody:
-                required: true
             responses:
                 '204':
                     description: Successful response - user is logged out.
+            security:
+                -
+                    apiKey: []
             operationId: signOut
             summary: Signs the user out.
     /env:
@@ -432,3 +400,6 @@ components:
             type: apiKey
             name: Authorization
             in: header
+        BasicAuth:
+            scheme: basic
+            type: http
