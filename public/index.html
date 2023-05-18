@@ -190,6 +190,9 @@
         fetch('/env')
             .then(response => response.json())
             .then(data => {
+                if (!data.client_id) {
+                    return reject('No client_id found');
+                }
                 google.accounts.id.initialize({
                     client_id: data.client_id,
                     callback: handleGLogin
@@ -245,9 +248,6 @@
     })
 
 
-
-    console.log()
-
     const {createApp} = Vue
     const app = createApp({
         data() {
@@ -289,19 +289,27 @@
         async created() {
             
             console.log('created')
-
-            let response = await this.send('GET', `/env`)
+            
+            this.movies = JSON.parse(localStorage.getItem('movies'))
+            
+            try {
+                let response = await this.send('GET', `/env`)
                 if (response.ok) {
                     this.client_id = response.body.client_id;
                 }
+                
+                this.getMovies()
+                this.getLogs()
+
+            } catch (e) {
+                console.log('option 2')
+                alert("Network error")
+            }
 
 
             this.sessionId = localStorage.getItem('sessionId')
             this.isAdmin = localStorage.getItem('isAdmin')
 
-            this.getMovies()
-            this.getLogs()
-            this.getEnv()
 
             //console.log(JSON.stringify(this.movies))
         },
@@ -544,6 +552,7 @@
                 let response = await this.send('GET', `/movies`)
                 if (response.ok) {
                     this.movies = response.body;
+                    localStorage.setItem('movies', JSON.stringify(this.movies))
                 }
             },
 
@@ -551,13 +560,6 @@
                 let response = await this.send('GET', `/logs`)
                 if (response.ok) {
                     this.logs = response.body;
-                }
-            },
-
-            getEnv: async function () {
-                let response = await this.send('GET', `/env`)
-                if (response.ok) {
-                    return response.body.client_id;
                 }
             },
 

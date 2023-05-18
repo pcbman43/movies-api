@@ -48,7 +48,13 @@ var sessions = [
 
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 app.use(express.static(__dirname + '/public'));
-app.get('/movies', (req, res) => {
+
+const delay = ms => new Promise(res => setTimeout(res, ms));
+
+app.get('/movies', async (req, res) => {
+
+    await delay(1000)
+    
     res.send(movies);
 })
 
