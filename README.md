@@ -34,6 +34,16 @@ Create or select a Google APIs project.
 
 Click Create credentials > OAuth client ID to create a client ID. Be sure to include both https://localhost and https://localhost:4000 in the Authorized JavaScript origins box.
 
+Your Client ID should look something like this:
+```
+1234567890-abc123def456.apps.googleusercontent.com
+``` 
+
+Then, in the .env file, set the value of the GOOGLE_CLIENT_ID variable to your client_id, the line should look like this:
+```
+GOOGLE_CLIENT_ID='1234567890-abc123def456.apps.googleusercontent.com'
+```
+
 Source - https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid
 
 ## Starting the app
