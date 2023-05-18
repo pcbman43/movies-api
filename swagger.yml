@@ -2,11 +2,19 @@ openapi: 3.0.2
 info:
     title: movies_api
     version: 1.0.0
+    description: >-
+        A movies API that allows users to view movies and their data (movie name, rating, the year it came
+        out, and a poster).
+
+        Administrators can edit this data, this includes adding, modifying and deleting movie entries, along
+        with viewing logs about movie changes.
 paths:
     /movies:
         summary: Path used to manage the list of movies.
-        description: 'The REST endpoint/path used to list and create zero or more `Movie` entities. '
+        description: The REST endpoint/path used to list and create zero or more `Movie` entities.
         get:
+            tags:
+                - movies
             responses:
                 '200':
                     content:
@@ -65,6 +73,8 @@ paths:
                                     poster: >-
                                         data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAIAQMAAAD+wSzIAAAABlBMVEX///+/v7+jQ3Y5AAAADklEQVQI12P4AIX8EAgALgAD/aNpbtEAAAAASUVORK5CYII
                 required: true
+            tags:
+                - movies
             responses:
                 '201':
                     content:
@@ -116,7 +126,7 @@ paths:
                     description: Will not add a movie to the list of movies because the user isnt an admin
             security:
                 -
-                    apiKey: []
+                    Bearer: []
             operationId: addMovie
             summary: Add a movie to the list
         delete:
@@ -131,6 +141,8 @@ paths:
                                 value:
                                     id: 4
                 required: true
+            tags:
+                - movies
             responses:
                 '204':
                     description: Successful response - removes the selected movie from the list
@@ -175,7 +187,7 @@ paths:
                     description: Will not remove a movie from the list of movies because the user isnt an admin
             security:
                 -
-                    apiKey: []
+                    Bearer: []
             operationId: deleteMovie
             summary: Remove a movie from the list
         patch:
@@ -202,6 +214,8 @@ paths:
                                     poster: >-
                                         data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAIAQMAAAD+wSzIAAAABlBMVEX///+/v7+jQ3Y5AAAADklEQVQI12P4AIX8EAgALgAD/aNpbtEAAAAASUVORK5CYII
                 required: true
+            tags:
+                - movies
             responses:
                 '204':
                     content:
@@ -260,11 +274,13 @@ paths:
                     description: When the user was not admin
             security:
                 -
-                    apiKey: []
+                    Bearer: []
             operationId: editMovie
             summary: Edit movie info in the list
     /logs:
         get:
+            tags:
+                - logs
             responses:
                 '200':
                     content:
@@ -290,6 +306,8 @@ paths:
             description: Gets a list of all `Logs` entities.
     /sessions:
         post:
+            tags:
+                - sessions
             responses:
                 '201':
                     content:
@@ -341,16 +359,20 @@ paths:
             operationId: signIn
             summary: Signs the user in.
         delete:
+            tags:
+                - sessions
             responses:
                 '204':
                     description: Successful response - user is logged out.
             security:
                 -
-                    apiKey: []
+                    Bearer: []
             operationId: signOut
             summary: Signs the user out.
     /env:
         get:
+            tags:
+                - env
             responses:
                 '200':
                     content:
@@ -393,13 +415,18 @@ components:
                 poster: >-
                     data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAIAQMAAAD+wSzIAAAABlBMVEX///+/v7+jQ3Y5AAAADklEQVQI12P4AIX8EAgALgAD/aNpbtEAAAAASUVORK5CYII
     securitySchemes:
-        Bearer:
-            scheme: bearer
-            type: http
-        apiKey:
-            type: apiKey
-            name: Authorization
-            in: header
         BasicAuth:
             scheme: basic
             type: http
+        Bearer:
+            scheme: bearer
+            type: http
+tags:
+    -
+        name: movies
+    -
+        name: sessions
+    -
+        name: logs
+    -
+        name: env

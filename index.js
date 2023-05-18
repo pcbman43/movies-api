@@ -279,25 +279,26 @@ function isValidJSON(jsonString) {
 
 function checkAuth(req, res, next) {
     try {
-    if (req.headers.authorization) {
-        let sessionId = req.headers.authorization;
-        var session = sessions.find((session) => session.id === sessionId);
+        if (req.headers.authorization) {
+            let sessionId = req.headers.authorization; // splice out 'Bearer '
+            sessionId = sessionId.slice(7);
+            var session = sessions.find((session) => session.id === sessionId);
 
-        if (!session) {
-            return res.status(401).send({ error: "Unauthorized" });
-        }
+            if (!session) {
+                return res.status(401).send({ error: "Unauthorized" });
+            }
 
-        var user = users.find((user) => user.id === session.userId);
+            var user = users.find((user) => user.id === session.userId);
 
-        if (user.isAdmin) {
-            next();
+            if (user.isAdmin) {
+                next();
+            } else {
+                return res.status(403).send({ error: "Forbidden" });
+            }
+
         } else {
-            return res.status(403).send({ error: "Forbidden" });
+            return res.status(401).send({ error: "Missing authorization data" });
         }
-        
-    } else {
-        return res.status(401).send({ error: "Missing authorization data" });
-    }
     } catch (e) {
         return res.status(401).send({ error: "Unauthorized" });
     }
