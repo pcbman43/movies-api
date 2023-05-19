@@ -31,8 +31,9 @@ Source - https://www.ibm.com/docs/en/api-connect/2018.x?topic=overview-generatin
 3. Click `Create credentials` > `OAuth client ID` to create a client ID. Include both https://localhost and https://localhost:4000 in the Authorized JavaScript origins box.
 
 4. Copy your Client ID and paste it into the .env file, next to the GOOGLE_CLIENT_ID variable, enclosed in apostrophes (' ').
-<br>
+
 **The line should look like this:**
+
 ```
 GOOGLE_CLIENT_ID='1234567890-abc123def456.apps.googleusercontent.com'
 ```
