@@ -8,6 +8,123 @@ info:
 
         Administrators can edit this data, this includes adding, modifying and deleting movie entries, along
         with viewing logs about movie changes.
+
+
+
+        Testing steps:
+
+
+        1. **Signing in**
+
+
+        Click the `Authorize` button, then fill out the `BasicAuth (http, Basic)` fields with the default
+        administrator credentials:
+
+
+        * `Username: Admin`
+
+        * `Password: Password`
+
+
+        and click the `Authorize` button beneath the fields.
+
+
+        ---
+
+
+        Click on the `POST` "/sessions" path, under the `sessions` tag, under that click `Try it out` and
+        `Execute`.
+
+
+        The server will respond with a "sessionId" value, copy it then return to the initial `Authorize`
+        button and click on it.
+
+
+        The sessionId value will look something like this:
+
+
+        `63fad44e-64ce-4a82-868f-846ffb1db74c`
+
+
+        Paste the acquired sessionId into the `Bearer (http, Bearer)` `Value` field and press the `Authorize`
+        button beneath it.
+
+
+        ## You are now authorized to make changes to the movie database.
+
+        ### e.g. `POST` adding, `DELETE` deleting and `PATCH` modifying movie entries.
+
+        ---
+
+
+        2. **Making changes to the movies database**
+
+
+        2.1 **Getting the list of movies**
+
+
+        Click on the `GET` "/movies" path, under the `movies` tag, under that click `Try it out` and
+        `Execute`.
+
+
+        The server will respond with a list of movies.
+
+
+        2.2 **Adding a movie**
+
+
+        Click on the `POST` "/movies" path, under the `movies` tag, under that click `Try it out`, then select
+        a request body and modify it. After that click `Execute`.
+
+
+        If the server responds with an empty body, that means the request went through and was accepted, you
+        can verify the addition of a movie with the `GET` "/movies" method.
+
+
+        2.3 **Modifying a movie**
+
+
+        Click on the `PATCH` "/movies" path, under the `movies` tag, under that click `Try it out`, then
+        select a request body and modify it. After that click `Execute`.
+
+
+        If the server responds with an empty body, that means the request went through and was accepted, you
+        can verify the modification to the movie entry with the `GET` "/movies" method.
+
+
+        2.4 **Deleting a movie**
+
+
+        Click on the `DELETE` "/movies" path, under the `movies tag`, under that click `Try it out`, then
+        select a request body and modify it. After that click `Execute`.
+
+
+        If the server responds with an empty body, that means the request went through and was accepted, you
+        can verify the removal of a movie entry with the `GET` "/movies" method.
+
+
+        ---
+
+
+        3. **Getting other data from the server**
+
+
+        3.1 **Getting the change logs from the server**
+
+
+        Click on the `GET` "/logs" path, under the `logs` tag, under that click `Try it out` and `Execute`.
+
+
+        The server will respond with a list of log entries.
+
+
+        3.2 **Getting the .env variables from the server**
+
+
+        Click on the `GET` "/env" path, under the `env` tag, under that click `Try it out` and `Execute`.
+
+
+        The server will respond with the client ID value.
 paths:
     /movies:
         summary: Path used to manage the list of movies.
@@ -58,15 +175,15 @@ paths:
                         examples:
                             '204':
                                 value:
-                                    id: 1
-                                    name: movie1
+                                    id: 4
+                                    name: movie4
                                     rating: 3
                                     year: 2004
                                     poster: >-
                                         data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAIAQMAAAD+wSzIAAAABlBMVEX///+/v7+jQ3Y5AAAADklEQVQI12P4AIX8EAgALgAD/aNpbtEAAAAASUVORK5CYII
                             '400':
                                 value:
-                                    id: 1
+                                    id: 4
                                     name: ''
                                     rating: 3
                                     year: 2004
@@ -199,7 +316,7 @@ paths:
                         examples:
                             patch_204:
                                 value:
-                                    id: 1
+                                    id: 4
                                     name: movie10
                                     rating: 3
                                     year: 2004
@@ -207,7 +324,7 @@ paths:
                                         data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAIAQMAAAD+wSzIAAAABlBMVEX///+/v7+jQ3Y5AAAADklEQVQI12P4AIX8EAgALgAD/aNpbtEAAAAASUVORK5CYII
                             patch_400:
                                 value:
-                                    id: 1
+                                    id: 4
                                     name: ''
                                     rating: 3
                                     year: 2004
